@@ -118,8 +118,8 @@
         </form>
       </div>
 
-      <!-- Auth 전용 Live Sync 설정 -->
-      <div class="auth-live-sync" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-card);">
+      <!-- Auth 전용 Live Sync 설정 (사용자 요청으로 숨김 처리) -->
+      <div class="auth-live-sync" style="display: none !important; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-card);">
         <label style="font-size: 12px; font-weight: 600; color: var(--color-primary); display: block; margin-bottom: 8px;">🔗 구글 시트 실시간 연동 (Live Sync)</label>
         <input type="text" id="auth-apps-script-url" placeholder="Apps Script Web App URL 입력..." style="width: 100%; padding: 10px 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid var(--border-card); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 12px;">
         <div style="display: flex; align-items: center;">
@@ -156,8 +156,8 @@
         <h1>BUSAN TOURISM <span>PMS</span></h1>
       </div>
       
-      <!-- 구글 시트 연결 표시기 및 라이브 연동 컨트롤 -->
-      <div class="sheets-connection-badge-wrapper">
+      <!-- 구글 시트 연결 표시기 및 라이브 연동 컨트롤 (사용자 요청으로 숨김 처리) -->
+      <div class="sheets-connection-badge-wrapper" style="display: none !important;">
         <div class="sheets-connection-badge">
           <div class="pulse-indicator" id="sync-pulse"></div>
           <div class="sheets-info">
