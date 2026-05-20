@@ -183,16 +183,13 @@
           <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
         
-        <!-- 권한 선택 (Multi-Role) -->
-        <div class="role-selector-wrapper">
-          <label for="role-select">권한 변경:</label>
-          <div class="select-custom">
-            <select id="role-select">
-              <option value="Intern" selected>인턴 지원자 (홍길동)</option>
-              <option value="Company">참여 기업 (밍글무드)</option>
-              <option value="Operator">총괄 운영사 (부산관광공사 & 밍글무드)</option>
-            </select>
+        <!-- 접속자 정보 -->
+        <div class="role-selector-wrapper" style="display: flex; align-items: center; gap: 8px;">
+          <label>접속자:</label>
+          <div class="logged-in-user" id="logged-in-user-display" style="font-weight: 600; color: var(--color-primary);">
+            -
           </div>
+          <button id="btn-logout" class="btn-sm btn-outline-sm" style="padding: 4px 8px; font-size: 11px;">로그아웃</button>
         </div>
       </div>
     </header>

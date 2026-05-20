@@ -83,19 +83,19 @@ class PMSDatabase {
     }
 
     if (!localStorage.getItem("PMS_Master_Users")) {
-      localStorage.setItem("PMS_Master_Users", JSON.stringify(DEFAULT_USERS));
+      localStorage.setItem("PMS_Master_Users", JSON.stringify([]));
     }
     if (!localStorage.getItem("PMS_Project_Status")) {
-      localStorage.setItem("PMS_Project_Status", JSON.stringify(DEFAULT_PROJECTS));
+      localStorage.setItem("PMS_Project_Status", JSON.stringify([]));
     }
     if (!localStorage.getItem("PMS_Documents_Log")) {
-      localStorage.setItem("PMS_Documents_Log", JSON.stringify(DEFAULT_DOCUMENTS));
+      localStorage.setItem("PMS_Documents_Log", JSON.stringify([]));
     }
     if (!localStorage.getItem("PMS_Notices")) {
-      localStorage.setItem("PMS_Notices", JSON.stringify(DEFAULT_NOTICES));
+      localStorage.setItem("PMS_Notices", JSON.stringify([]));
     }
     if (!localStorage.getItem("PMS_Academy_Sessions")) {
-      localStorage.setItem("PMS_Academy_Sessions", JSON.stringify(DEFAULT_SESSIONS));
+      localStorage.setItem("PMS_Academy_Sessions", JSON.stringify([]));
     }
     if (!localStorage.getItem("PMS_Registered_Users")) {
       localStorage.setItem("PMS_Registered_Users", JSON.stringify([]));
@@ -248,10 +248,15 @@ const appState = {
     document.getElementById("auth-view").classList.remove("active");
     document.getElementById("app-main-content").style.display = "block";
     
-    // 헤더 드롭다운 동기화
-    const roleSelect = document.getElementById("role-select");
-    if(roleSelect) {
-      roleSelect.value = role;
+    // 접속자 정보 표시 업데이트
+    const users = db.getTable("Master_Users") || [];
+    const user = users.find(u => u.UserID === userId);
+    let displayName = userId === "Btopms" ? "최고 관리자" : (user ? user.Name : userId);
+    let roleName = role === "Intern" ? "인턴" : (role === "Company" ? "기업" : "운영사");
+    
+    const userDisplay = document.getElementById("logged-in-user-display");
+    if (userDisplay) {
+      userDisplay.innerText = `${displayName} (${roleName})`;
     }
     
     this.updateUI();
@@ -374,14 +379,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("current-sheet-id").innerText = ACTIVE_SHEET_ID;
   document.getElementById("sheets-link-display").href = `https://docs.google.com/spreadsheets/d/${ACTIVE_SHEET_ID}/edit`;
   
-  // 2) 역할 스위처 바인딩
-  const roleSelect = document.getElementById("role-select");
-  roleSelect.addEventListener("change", (e) => {
-    // 실제 로그인 세션이 아니더라도 스위처로 테스트 가능하도록
-    if(appState.currentUser) {
-       appState.setRole(e.target.value);
-    }
-  });
+  // 2) 로그아웃 버튼 바인딩
+  const btnLogout = document.getElementById("btn-logout");
+  if(btnLogout) {
+    btnLogout.addEventListener("click", () => {
+      location.reload();
+    });
+  }
 
   // 3) 사업 전환 탭 바인딩
   const projectTabs = document.querySelectorAll(".project-tab");
