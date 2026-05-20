@@ -103,6 +103,9 @@ class PMSDatabase {
     if (!localStorage.getItem("PMS_Registered_Users")) {
       localStorage.setItem("PMS_Registered_Users", JSON.stringify([]));
     }
+    if (!localStorage.getItem("PMS_Application_Status")) {
+      localStorage.setItem("PMS_Application_Status", JSON.stringify([]));
+    }
   }
 
   getTable(tableName) {
@@ -168,6 +171,9 @@ class PMSDatabase {
         }
         if (res.data.Registered_Users) {
           localStorage.setItem("PMS_Registered_Users", JSON.stringify(res.data.Registered_Users));
+        }
+        if (res.data.Application_Status) {
+          localStorage.setItem("PMS_Application_Status", JSON.stringify(res.data.Application_Status));
         }
         
         if (syncBadge) {
@@ -334,8 +340,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = users.find(u => u.UserID === userId);
     
     if (user) {
-      // 본 데모에서는 일반 유저의 비밀번호 엄격한 검증을 생략하거나 추후 연동 가능
-      // (현 단계에서는 아이디가 존재하면 접속 허용 처리)
+      if (user.Password && user.Password !== password) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return;
+      }
       appState.login(user.UserID, user.Role);
     } else {
       alert("아이디 또는 비밀번호가 잘못되었습니다.");
@@ -369,7 +377,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Local Storage 즉시 반영
-    users.push({ UserID: userId, Name: postData.Name || postData.CompanyName, Role: role, Email: postData.Email, ActiveState: "Active" });
+    users.push({ UserID: userId, Name: postData.Name || postData.CompanyName, Role: role, Email: postData.Email, Password: password, ActiveState: "Active" });
     db.saveTable("Master_Users", users);
     
     const registered = db.getTable("Registered_Users");
@@ -584,35 +592,42 @@ function renderInternDashboard() {
   if (activeProj === "Mice") projTitle = "관광 MICE 아이디어 공모전";
   document.getElementById("intern-active-project-name").innerText = projTitle;
 
-  // 2) 구글 시트(Project_Status)에서 현재 아카데미 수료 여부 파악 (연계 락 로직)
+  // 2) 구글 시트(Application_Status)에서 현재 선택한 사업 신청 여부 파악
+  const applications = db.getTable("Application_Status") || [];
+  const hasApplied = applications.some(a => a.UserID === appState.currentUser && a.ProjectType === activeProj);
+  
+  // 락 오버레이 및 콘텐츠 블러 분기 조건 처리
+  const applyOverlay = document.getElementById("intern-apply-overlay");
+  const gridContent = document.getElementById("intern-grid-content");
+
+  // 무조건 오버레이 띄우고 신청 여부에 따라 분기
+  applyOverlay.style.display = "flex";
+  gridContent.classList.add("blurred");
+  
+  let projTitleShort = activeProj === "Internship" ? "인턴십 매칭 프로그램" : (activeProj === "Academy" ? "취창업 아카데미" : "관광 MICE 공모전");
+  document.getElementById("locked-service-name").innerText = projTitleShort;
+  
+  if (hasApplied) {
+    // 신청 완료 상태
+    document.getElementById("apply-btn-container").style.display = "none";
+    document.getElementById("apply-complete-msg").style.display = "block";
+    document.getElementById("apply-icon").innerText = "✅";
+  } else {
+    // 미신청 상태
+    document.getElementById("apply-btn-container").style.display = "block";
+    document.getElementById("apply-complete-msg").style.display = "none";
+    document.getElementById("apply-icon").innerText = "📝";
+  }
+
+
+  // 현재 출석율 시각화 (기존 코드 유지)
   const projStatusList = db.getTable("Project_Status");
   const academyStatus = projStatusList.find(p => p.UserID === appState.currentUser && p.ProjectType === "Academy") || {
     Stage: "수강중", MatchingStatus: "진행중", ProgressPercent: "80"
   };
-
   const isAcademyCompleted = academyStatus.Stage === "최종수료" && academyStatus.ProgressPercent === "100";
   
-  // 락 오버레이 및 콘텐츠 블러 분기 조건 처리
-  const lockOverlay = document.getElementById("intern-lock-overlay");
-  const gridContent = document.getElementById("intern-grid-content");
-
-  if (activeProj !== "Academy" && !isAcademyCompleted) {
-    // 🔒 아카데미 미수료인 상태에서 인턴십/공모전 접근 시 락 처리!
-    lockOverlay.style.display = "flex";
-    gridContent.classList.add("blurred");
-    document.getElementById("locked-service-name").innerText = activeProj === "Internship" ? "인턴십 매칭 프로그램" : "관광 MICE 공모전";
-    
-    // 현재 출석율 시각화
-    const sessions = db.getTable("Academy_Sessions");
-    const attendedCount = sessions.filter(s => s.status === "attended").length;
-    document.getElementById("lock-attendance-rate").innerText = `${(attendedCount / 5 * 100).toFixed(0)}% (총 5회 중 ${attendedCount}회차 완료)`;
-  } else {
-    // 잠금 해제
-    lockOverlay.style.display = "none";
-    gridContent.classList.remove("blurred");
-  }
-
-  // 3) 구글 시트(Project_Status)에서 현재 인턴 상태 조회
+  // 대시보드 내용 렌더링
   const currentStatus = projStatusList.find(p => p.UserID === appState.currentUser && p.ProjectType === activeProj) || {
     Stage: "모집중", MatchingStatus: "지원 가능", ProgressPercent: "10", RegistrationNo: "N/A"
   };
@@ -831,6 +846,36 @@ window.attendSession = async function(sessionNum) {
     renderSheetsEmulator(appState.currentUser);
   }
 };
+
+// --- [사업 신청 액션] ---
+window.applyForCurrentProject = async function() {
+  const activeProj = appState.currentProject;
+  const applications = db.getTable("Application_Status") || [];
+  
+  const postData = {
+    action: "applyProgram",
+    UserID: appState.currentUser,
+    ProjectType: activeProj
+  };
+  
+  // 로컬 스토리지에 즉시 반영
+  applications.push({
+    ApplyID: "APP-LOCAL-" + Date.now(),
+    UserID: appState.currentUser,
+    ProjectType: activeProj,
+    ApplyTime: getNowDateString()
+  });
+  db.saveTable("Application_Status", applications);
+  
+  // 실시간 구글 시트 쓰기 연계
+  if (db.liveMode) {
+    await db.writeToGoogleSheets(postData);
+  }
+  
+  // UI 리렌더링
+  renderInternDashboard();
+};
+// --- [사업 신청 액션 끝] ---
 
 // 아카데미 최종 수료완료 액션 (인턴십, 공모전 락 해제 트리거)
 window.completeAcademy = async function() {

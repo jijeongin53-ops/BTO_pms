@@ -18,13 +18,13 @@ function initializeSheets() {
   // 1) Master_Users 탭 초기화
   var sheetUsers = ss.getSheetByName("Master_Users") || ss.insertSheet("Master_Users");
   sheetUsers.clear();
-  sheetUsers.appendRow(["UserID", "Name", "Role", "Email", "ActiveState"]);
+  sheetUsers.appendRow(["UserID", "Name", "Role", "Email", "Password", "ActiveState"]);
   var initialUsers = [
-    ["intern_01", "홍길동", "Intern", "hong@gmail.com", "Active"],
-    ["intern_02", "김영희", "Intern", "young@gmail.com", "Active"],
-    ["intern_03", "이철수", "Intern", "chul@gmail.com", "Active"],
-    ["company_01", "밍글무드", "Company", "contact@minglemood.com", "Active"],
-    ["operator_01", "부산관광공사 & 밍글무드", "Operator", "pms@visitbusan.or.kr", "Active"]
+    ["intern_01", "홍길동", "Intern", "hong@gmail.com", "", "Active"],
+    ["intern_02", "김영희", "Intern", "young@gmail.com", "", "Active"],
+    ["intern_03", "이철수", "Intern", "chul@gmail.com", "", "Active"],
+    ["company_01", "밍글무드", "Company", "contact@minglemood.com", "", "Active"],
+    ["operator_01", "부산관광공사 & 밍글무드", "Operator", "pms@visitbusan.or.kr", "", "Active"]
   ];
   initialUsers.forEach(function(row) {
     sheetUsers.appendRow(row);
@@ -61,7 +61,13 @@ function initializeSheets() {
   // 4) Registered_Users 탭 초기화 (신규 가입자 저장용)
   var sheetReg = ss.getSheetByName("Registered_Users") || ss.insertSheet("Registered_Users");
   if (sheetReg.getLastRow() === 0) {
-    sheetReg.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "RegisteredTime"]);
+    sheetReg.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "Password", "RegisteredTime"]);
+  }
+
+  // 5) Application_Status 탭 초기화 (사업 신청 현황)
+  var sheetApply = ss.getSheetByName("Application_Status") || ss.insertSheet("Application_Status");
+  if (sheetApply.getLastRow() === 0) {
+    sheetApply.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime"]);
   }
 
   // 4) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
@@ -85,8 +91,8 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 4개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users"];
+    // 5개 탭에서 데이터를 읽어와 JSON으로 반환
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -209,7 +215,7 @@ function doPost(e) {
       var sheet = ss.getSheetByName("Registered_Users");
       if (!sheet) {
         sheet = ss.insertSheet("Registered_Users");
-        sheet.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "RegisteredTime"]);
+        sheet.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "Password", "RegisteredTime"]);
       }
       var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
       
@@ -222,6 +228,7 @@ function doPost(e) {
         postData.Email || "",
         postData.CompanyName || "",
         postData.ContactPerson || "",
+        postData.Password || "",
         nowStr
       ]);
       
@@ -233,10 +240,30 @@ function doPost(e) {
         displayName,
         postData.Role,
         postData.Email || "",
+        postData.Password || "",
         "Active"
       ]);
       
       return makeJsonResponse({ success: true, message: "User registered successfully" });
+      
+    } else if (action === "applyProgram") {
+      // 신규 사업 신청 기록
+      var sheet = ss.getSheetByName("Application_Status");
+      if (!sheet) {
+        sheet = ss.insertSheet("Application_Status");
+        sheet.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime"]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      var applyId = "APP-" + Date.now();
+      
+      sheet.appendRow([
+        applyId,
+        postData.UserID,
+        postData.ProjectType,
+        nowStr
+      ]);
+      
+      return makeJsonResponse({ success: true, message: "Application submitted successfully" });
     }
     
     return makeJsonResponse({ success: false, error: "Unknown action: " + action });

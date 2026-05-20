@@ -239,16 +239,17 @@
         </div>
 
         <div class="intern-grid-wrapper" style="position: relative; width: 100%;">
-          <!-- 아카데미 미수료 시 락 오버레이 -->
-          <div id="intern-lock-overlay" class="lock-overlay glass-card flex-center-col" style="display: none;">
-            <div class="lock-icon">🔒</div>
-            <h3>서비스 접근 제한 안내</h3>
-            <p>본 <strong><span id="locked-service-name">인턴십 매칭 프로그램</span></strong>은 <strong>'취창업 아카데미(총 5회)'를 수료</strong>한 청년만 참여할 수 있습니다.</p>
-            <div class="lock-stats-box">
-              <span>현재 나의 아카데미 이수 현황:</span>
-              <strong id="lock-attendance-rate">80% (4 / 5회차 완료)</strong>
+          <!-- 사업 신청 락 오버레이 -->
+          <div id="intern-apply-overlay" class="lock-overlay glass-card flex-center-col" style="display: none;">
+            <div class="lock-icon" id="apply-icon">📝</div>
+            <h3 id="apply-overlay-title">사업 신청 안내</h3>
+            <p>본 <strong><span id="locked-service-name">인턴십 매칭 프로그램</span></strong>에 아직 신청하지 않으셨습니다. 아래 버튼을 눌러 신청해 주세요.</p>
+            <div id="apply-btn-container" style="margin-top: 15px;">
+              <button class="btn-sm btn-primary-sm" style="width: auto; padding: 10px 20px;" onclick="applyForCurrentProject()">신청하기 ➔</button>
             </div>
-            <button class="btn-sm btn-primary-sm" style="margin-top: 15px; width: auto; padding: 10px 20px;" onclick="switchTabToAcademy()">아카데미 출석 및 수료하러 가기 ➔</button>
+            <div id="apply-complete-msg" style="display: none; margin-top: 15px;">
+              <span style="color: var(--status-success); font-weight: bold; font-size: 16px;">✅ 신청되었습니다. 추후 결과를 알려드립니다.</span>
+            </div>
           </div>
 
           <div class="dashboard-grid" id="intern-grid-content">
