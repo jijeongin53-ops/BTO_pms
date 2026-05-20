@@ -305,28 +305,39 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("login-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const userId = document.getElementById("login-id").value.trim();
+    const password = document.getElementById("login-pwd").value;
+    
+    // 관리자(Operator) 하드코딩 체크
+    if (userId === "Btopms" && password === "btopms1234") {
+      appState.login("Btopms", "Operator");
+      return;
+    }
+    
     const users = db.getTable("Master_Users");
     const user = users.find(u => u.UserID === userId);
     
     if (user) {
+      // 본 데모에서는 일반 유저의 비밀번호 엄격한 검증을 생략하거나 추후 연동 가능
+      // (현 단계에서는 아이디가 존재하면 접속 허용 처리)
       appState.login(user.UserID, user.Role);
     } else {
-      alert("존재하지 않는 아이디입니다.");
+      alert("아이디 또는 비밀번호가 잘못되었습니다.");
     }
   });
 
   document.getElementById("signup-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const userId = document.getElementById("signup-id").value.trim();
+    const password = document.getElementById("signup-pwd").value;
     const role = document.querySelector('input[name="signup-role"]:checked').value;
     
     const users = db.getTable("Master_Users");
-    if (users.find(u => u.UserID === userId)) {
+    if (users.find(u => u.UserID === userId) || userId === "Btopms") {
       alert("이미 존재하는 아이디입니다.");
       return;
     }
 
-    const postData = { action: "registerUser", UserID: userId, Role: role };
+    const postData = { action: "registerUser", UserID: userId, Password: password, Role: role };
     
     if (role === "Intern") {
       postData.Name = document.getElementById("signup-intern-name").value;
@@ -338,9 +349,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       postData.ContactPerson = document.getElementById("signup-comp-manager").value;
       postData.Phone = document.getElementById("signup-comp-phone").value;
       postData.Email = document.getElementById("signup-comp-email").value;
-    } else if (role === "Operator") {
-      postData.Name = document.getElementById("signup-op-name").value;
-      postData.Email = document.getElementById("signup-op-email").value;
     }
 
     // Local Storage 즉시 반영

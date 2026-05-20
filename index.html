@@ -44,6 +44,10 @@
             <label for="login-id">아이디 (UserID)</label>
             <input type="text" id="login-id" placeholder="아이디를 입력하세요" required>
           </div>
+          <div class="form-group">
+            <label for="login-pwd">비밀번호</label>
+            <input type="password" id="login-pwd" placeholder="비밀번호를 입력하세요" required>
+          </div>
           <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">로그인</button>
         </form>
 
@@ -58,15 +62,16 @@
               <label class="radio-label">
                 <input type="radio" name="signup-role" value="Company"> 기업
               </label>
-              <label class="radio-label">
-                <input type="radio" name="signup-role" value="Operator"> 관리자
-              </label>
             </div>
           </div>
           
           <div class="form-group">
             <label for="signup-id">희망 아이디 (UserID)</label>
             <input type="text" id="signup-id" placeholder="사용할 아이디" required>
+          </div>
+          <div class="form-group">
+            <label for="signup-pwd">비밀번호</label>
+            <input type="password" id="signup-pwd" placeholder="비밀번호를 입력하세요" required>
           </div>
 
           <!-- 청년용 추가 필드 -->
@@ -106,18 +111,6 @@
             <div class="form-group">
               <label for="signup-comp-email">담당자 이메일</label>
               <input type="email" id="signup-comp-email" placeholder="contact@company.com">
-            </div>
-          </div>
-
-          <!-- 관리자용 추가 필드 -->
-          <div id="signup-operator-fields" class="signup-dynamic-fields">
-            <div class="form-group">
-              <label for="signup-op-name">소속 기관 / 담당자명</label>
-              <input type="text" id="signup-op-name" placeholder="부산관광공사 / 담당자">
-            </div>
-            <div class="form-group">
-              <label for="signup-op-email">이메일</label>
-              <input type="email" id="signup-op-email" placeholder="admin@visitbusan.or.kr">
             </div>
           </div>
 
