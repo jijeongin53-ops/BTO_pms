@@ -602,31 +602,51 @@ function renderInternDashboard() {
   if (activeProj === "Mice") projTitle = "관광 MICE 아이디어 공모전";
   document.getElementById("intern-active-project-name").innerText = projTitle;
 
-  // 2) 구글 시트(Application_Status)에서 현재 선택한 사업 신청 여부 파악
+  // 2) 구글 시트(Application_Status)에서 현재 선택한 사업 신청 여부 및 승인 상태 파악
   const applications = db.getTable("Application_Status") || [];
-  const hasApplied = applications.some(a => a.UserID === appState.currentUser && a.ProjectType === activeProj);
+  const myApplication = applications.find(a => a.UserID === appState.currentUser && a.ProjectType === activeProj);
+  const hasApplied = !!myApplication;
+  const approvalStatus = myApplication ? String(myApplication.Approval || "").trim().toUpperCase() : "";
   
   // 락 오버레이 및 콘텐츠 블러 분기 조건 처리
   const applyOverlay = document.getElementById("intern-apply-overlay");
   const gridContent = document.getElementById("intern-grid-content");
+  const applyRejectMsg = document.getElementById("apply-reject-msg");
 
-  // 무조건 오버레이 띄우고 신청 여부에 따라 분기
-  applyOverlay.style.display = "flex";
-  gridContent.classList.add("blurred");
-  
   let projTitleShort = activeProj === "Internship" ? "인턴십 매칭 프로그램" : (activeProj === "Academy" ? "취창업 아카데미" : "관광 MICE 공모전");
   document.getElementById("locked-service-name").innerText = projTitleShort;
   
-  if (hasApplied) {
-    // 신청 완료 상태
+  if (hasApplied && approvalStatus === "Y") {
+    // ✅ 승인 완료 → 오버레이 해제, 상세 페이지 표시
+    applyOverlay.style.display = "none";
+    gridContent.classList.remove("blurred");
+  } else if (hasApplied && approvalStatus === "N") {
+    // ❌ 거절됨 → 탈락 메시지 표시
+    applyOverlay.style.display = "flex";
+    gridContent.classList.add("blurred");
+    document.getElementById("apply-btn-container").style.display = "none";
+    document.getElementById("apply-complete-msg").style.display = "none";
+    if (applyRejectMsg) applyRejectMsg.style.display = "block";
+    document.getElementById("apply-icon").innerText = "😢";
+    document.getElementById("apply-overlay-title").innerText = "심사 결과 안내";
+  } else if (hasApplied) {
+    // ⏳ 신청 완료, 승인 대기 중
+    applyOverlay.style.display = "flex";
+    gridContent.classList.add("blurred");
     document.getElementById("apply-btn-container").style.display = "none";
     document.getElementById("apply-complete-msg").style.display = "block";
+    if (applyRejectMsg) applyRejectMsg.style.display = "none";
     document.getElementById("apply-icon").innerText = "✅";
+    document.getElementById("apply-overlay-title").innerText = "사업 신청 안내";
   } else {
-    // 미신청 상태
+    // 📝 미신청 상태
+    applyOverlay.style.display = "flex";
+    gridContent.classList.add("blurred");
     document.getElementById("apply-btn-container").style.display = "block";
     document.getElementById("apply-complete-msg").style.display = "none";
+    if (applyRejectMsg) applyRejectMsg.style.display = "none";
     document.getElementById("apply-icon").innerText = "📝";
+    document.getElementById("apply-overlay-title").innerText = "사업 신청 안내";
   }
 
 
@@ -873,7 +893,8 @@ window.applyForCurrentProject = async function() {
     ApplyID: "APP-LOCAL-" + Date.now(),
     UserID: appState.currentUser,
     ProjectType: activeProj,
-    ApplyTime: getNowDateString()
+    ApplyTime: getNowDateString(),
+    Approval: ""
   });
   db.saveTable("Application_Status", applications);
   

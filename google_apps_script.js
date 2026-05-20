@@ -67,7 +67,7 @@ function initializeSheets() {
   // 5) Application_Status 탭 초기화 (사업 신청 현황)
   var sheetApply = ss.getSheetByName("Application_Status") || ss.insertSheet("Application_Status");
   if (sheetApply.getLastRow() === 0) {
-    sheetApply.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime"]);
+    sheetApply.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime", "Approval"]);
   }
 
   // 6) Admin_Dashboard 탭 초기화 (관리자 예산 및 목표 인원 관리)
@@ -258,7 +258,7 @@ function doPost(e) {
       var sheet = ss.getSheetByName("Application_Status");
       if (!sheet) {
         sheet = ss.insertSheet("Application_Status");
-        sheet.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime"]);
+        sheet.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime", "Approval"]);
       }
       var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
       var applyId = "APP-" + Date.now();
@@ -267,7 +267,8 @@ function doPost(e) {
         applyId,
         postData.UserID,
         postData.ProjectType,
-        nowStr
+        nowStr,
+        ""
       ]);
       
       return makeJsonResponse({ success: true, message: "Application submitted successfully" });
