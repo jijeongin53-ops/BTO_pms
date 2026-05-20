@@ -64,10 +64,17 @@ function initializeSheets() {
     sheetReg.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "Password", "RegisteredTime"]);
   }
 
-  // 5) Application_Status 탭 초기화 (사업 신청 현황)
+  // 5) Application_Status 탭 초기화 (사업 신청 현황 + 승인 필드)
   var sheetApply = ss.getSheetByName("Application_Status") || ss.insertSheet("Application_Status");
   if (sheetApply.getLastRow() === 0) {
     sheetApply.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime", "Approval"]);
+  } else {
+    // 기존 데이터가 있을 때: Approval 헤더가 없으면 추가
+    var headers = sheetApply.getRange(1, 1, 1, sheetApply.getLastColumn()).getValues()[0];
+    if (headers.indexOf("Approval") === -1) {
+      var newCol = sheetApply.getLastColumn() + 1;
+      sheetApply.getRange(1, newCol).setValue("Approval");
+    }
   }
 
   // 6) Admin_Dashboard 탭 초기화 (관리자 예산 및 목표 인원 관리)
