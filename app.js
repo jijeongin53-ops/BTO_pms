@@ -384,6 +384,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   // --- [인증 뷰 초기화 끝] ---
 
+  // --- [Auth Live Sync 동기화] ---
+  const authUrlInput = document.getElementById("auth-apps-script-url");
+  const authLiveCheckbox = document.getElementById("auth-live-mode-checkbox");
+  
+  if (authUrlInput && authLiveCheckbox) {
+    authUrlInput.value = db.appsScriptUrl;
+    authLiveCheckbox.checked = db.liveMode;
+    
+    authUrlInput.addEventListener("change", (e) => {
+      db.appsScriptUrl = e.target.value.trim();
+      localStorage.setItem("PMS_Apps_Script_URL", db.appsScriptUrl);
+      const mainUrlInput = document.getElementById("apps-script-url");
+      if (mainUrlInput) mainUrlInput.value = db.appsScriptUrl;
+    });
+    
+    authLiveCheckbox.addEventListener("change", (e) => {
+      db.liveMode = e.target.checked;
+      localStorage.setItem("PMS_Live_Mode", db.liveMode);
+      const mainLiveCheckbox = document.getElementById("live-mode-checkbox");
+      if (mainLiveCheckbox) mainLiveCheckbox.checked = db.liveMode;
+    });
+  }
+  // --- [Auth Live Sync 동기화 끝] ---
+
   // 1) 헤더 구글 시트 ID 연결 정보 업데이트
   document.getElementById("current-sheet-id").innerText = ACTIVE_SHEET_ID;
   document.getElementById("sheets-link-display").href = `https://docs.google.com/spreadsheets/d/${ACTIVE_SHEET_ID}/edit`;

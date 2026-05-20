@@ -117,6 +117,20 @@
           <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">가입하기</button>
         </form>
       </div>
+
+      <!-- Auth 전용 Live Sync 설정 -->
+      <div class="auth-live-sync" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-card);">
+        <label style="font-size: 12px; font-weight: 600; color: var(--color-primary); display: block; margin-bottom: 8px;">🔗 구글 시트 실시간 연동 (Live Sync)</label>
+        <input type="text" id="auth-apps-script-url" placeholder="Apps Script Web App URL 입력..." style="width: 100%; padding: 10px 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid var(--border-card); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 12px;">
+        <div style="display: flex; align-items: center;">
+          <label class="switch" style="transform: scale(0.85); transform-origin: left center; margin: 0;">
+            <input type="checkbox" id="auth-live-mode-checkbox">
+            <span class="slider round"></span>
+          </label>
+          <span style="font-size: 12px; color: var(--text-muted); margin-left: 8px;">연동 활성화 (회원가입/로그인 시 필수)</span>
+        </div>
+      </div>
+
     </div>
   </div>
 
