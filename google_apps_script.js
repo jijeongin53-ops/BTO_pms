@@ -58,6 +58,12 @@ function initializeSheets() {
     sheetDocs.appendRow(row);
   });
 
+  // 4) Registered_Users 탭 초기화 (신규 가입자 저장용)
+  var sheetReg = ss.getSheetByName("Registered_Users") || ss.insertSheet("Registered_Users");
+  if (sheetReg.getLastRow() === 0) {
+    sheetReg.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "RegisteredTime"]);
+  }
+
   // 4) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
   var defaultSheet1 = ss.getSheetByName("시트1");
   var defaultSheet2 = ss.getSheetByName("Sheet1");
@@ -79,8 +85,8 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 3개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log"];
+    // 4개 탭에서 데이터를 읽어와 JSON으로 반환
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -197,6 +203,40 @@ function doPost(e) {
         nowStr
       ]);
       return makeJsonResponse({ success: true, message: "Document logged successfully" });
+      
+    } else if (action === "registerUser") {
+      // 신규 회원가입 기록
+      var sheet = ss.getSheetByName("Registered_Users");
+      if (!sheet) {
+        sheet = ss.insertSheet("Registered_Users");
+        sheet.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "RegisteredTime"]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      
+      sheet.appendRow([
+        postData.UserID,
+        postData.Role,
+        postData.Name || "",
+        postData.Phone || "",
+        postData.Birthdate || "",
+        postData.Email || "",
+        postData.CompanyName || "",
+        postData.ContactPerson || "",
+        nowStr
+      ]);
+      
+      // 즉시 로그인을 위해 Master_Users 에도 등록
+      var masterSheet = ss.getSheetByName("Master_Users");
+      var displayName = postData.Role === "Company" ? postData.CompanyName : postData.Name;
+      masterSheet.appendRow([
+        postData.UserID,
+        displayName,
+        postData.Role,
+        postData.Email || "",
+        "Active"
+      ]);
+      
+      return makeJsonResponse({ success: true, message: "User registered successfully" });
     }
     
     return makeJsonResponse({ success: false, error: "Unknown action: " + action });

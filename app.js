@@ -97,6 +97,9 @@ class PMSDatabase {
     if (!localStorage.getItem("PMS_Academy_Sessions")) {
       localStorage.setItem("PMS_Academy_Sessions", JSON.stringify(DEFAULT_SESSIONS));
     }
+    if (!localStorage.getItem("PMS_Registered_Users")) {
+      localStorage.setItem("PMS_Registered_Users", JSON.stringify([]));
+    }
   }
 
   getTable(tableName) {
@@ -160,6 +163,9 @@ class PMSDatabase {
         if (res.data.Documents_Log) {
           localStorage.setItem("PMS_Documents_Log", JSON.stringify(res.data.Documents_Log));
         }
+        if (res.data.Registered_Users) {
+          localStorage.setItem("PMS_Registered_Users", JSON.stringify(res.data.Registered_Users));
+        }
         
         if (syncBadge) {
           syncBadge.innerHTML = `<span class="indicator-glow" style="background-color: var(--status-success); box-shadow: 0 0 8px var(--status-success)"></span>LIVE CONNECTED`;
@@ -216,10 +222,10 @@ const db = new PMSDatabase();
 
 // 3. 애플리케이션 상태 컨트롤러
 const appState = {
-  currentRole: "Intern", // Intern, Company, Operator
+  currentRole: "", // Intern, Company, Operator
   currentProject: "Internship", // Internship, Academy, Mice
   currentSheet: "Master_Users", // Master_Users, Project_Status, Documents_Log
-  currentUser: "intern_01",
+  currentUser: "",
   
   setRole(role) {
     this.currentRole = role;
@@ -236,7 +242,24 @@ const appState = {
     renderSheetsEmulator();
   },
 
+  login(userId, role) {
+    this.currentUser = userId;
+    this.currentRole = role;
+    document.getElementById("auth-view").classList.remove("active");
+    document.getElementById("app-main-content").style.display = "block";
+    
+    // 헤더 드롭다운 동기화
+    const roleSelect = document.getElementById("role-select");
+    if(roleSelect) {
+      roleSelect.value = role;
+    }
+    
+    this.updateUI();
+  },
+
   updateUI() {
+    if (!this.currentUser) return; // 로그인 전이면 UI 렌더링 스킵
+    
     // 뷰 전환
     document.querySelectorAll(".dashboard-view").forEach(view => view.classList.remove("active"));
     
@@ -257,6 +280,88 @@ const appState = {
 
 // 4. 초기 이벤트 바인딩
 document.addEventListener("DOMContentLoaded", async () => {
+  // --- [인증 뷰 초기화] ---
+  const authTabs = document.querySelectorAll(".auth-tab");
+  authTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      authTabs.forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(tab.dataset.target).classList.add("active");
+    });
+  });
+
+  const signupRadios = document.querySelectorAll('input[name="signup-role"]');
+  signupRadios.forEach(radio => {
+    radio.addEventListener("change", (e) => {
+      document.querySelectorAll(".signup-dynamic-fields").forEach(f => f.classList.remove("active"));
+      const role = e.target.value;
+      if (role === "Intern") document.getElementById("signup-intern-fields").classList.add("active");
+      else if (role === "Company") document.getElementById("signup-company-fields").classList.add("active");
+      else if (role === "Operator") document.getElementById("signup-operator-fields").classList.add("active");
+    });
+  });
+
+  document.getElementById("login-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const userId = document.getElementById("login-id").value.trim();
+    const users = db.getTable("Master_Users");
+    const user = users.find(u => u.UserID === userId);
+    
+    if (user) {
+      appState.login(user.UserID, user.Role);
+    } else {
+      alert("존재하지 않는 아이디입니다.");
+    }
+  });
+
+  document.getElementById("signup-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const userId = document.getElementById("signup-id").value.trim();
+    const role = document.querySelector('input[name="signup-role"]:checked').value;
+    
+    const users = db.getTable("Master_Users");
+    if (users.find(u => u.UserID === userId)) {
+      alert("이미 존재하는 아이디입니다.");
+      return;
+    }
+
+    const postData = { action: "registerUser", UserID: userId, Role: role };
+    
+    if (role === "Intern") {
+      postData.Name = document.getElementById("signup-intern-name").value;
+      postData.Phone = document.getElementById("signup-intern-phone").value;
+      postData.Birthdate = document.getElementById("signup-intern-birth").value;
+      postData.Email = document.getElementById("signup-intern-email").value;
+    } else if (role === "Company") {
+      postData.CompanyName = document.getElementById("signup-comp-name").value;
+      postData.ContactPerson = document.getElementById("signup-comp-manager").value;
+      postData.Phone = document.getElementById("signup-comp-phone").value;
+      postData.Email = document.getElementById("signup-comp-email").value;
+    } else if (role === "Operator") {
+      postData.Name = document.getElementById("signup-op-name").value;
+      postData.Email = document.getElementById("signup-op-email").value;
+    }
+
+    // Local Storage 즉시 반영
+    users.push({ UserID: userId, Name: postData.Name || postData.CompanyName, Role: role, Email: postData.Email, ActiveState: "Active" });
+    db.saveTable("Master_Users", users);
+    
+    const registered = db.getTable("Registered_Users");
+    registered.push(postData);
+    db.saveTable("Registered_Users", registered);
+    
+    // Live 연동 시 Google Sheets 에 전송
+    if (db.liveMode && db.appsScriptUrl) {
+      db.writeToGoogleSheets(postData);
+    }
+    
+    alert("회원가입이 완료되었습니다!");
+    document.querySelector('.auth-tab[data-target="login-form"]').click();
+    document.getElementById("login-id").value = userId;
+  });
+  // --- [인증 뷰 초기화 끝] ---
+
   // 1) 헤더 구글 시트 ID 연결 정보 업데이트
   document.getElementById("current-sheet-id").innerText = ACTIVE_SHEET_ID;
   document.getElementById("sheets-link-display").href = `https://docs.google.com/spreadsheets/d/${ACTIVE_SHEET_ID}/edit`;
@@ -264,7 +369,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 2) 역할 스위처 바인딩
   const roleSelect = document.getElementById("role-select");
   roleSelect.addEventListener("change", (e) => {
-    appState.setRole(e.target.value);
+    // 실제 로그인 세션이 아니더라도 스위처로 테스트 가능하도록
+    if(appState.currentUser) {
+       appState.setRole(e.target.value);
+    }
   });
 
   // 3) 사업 전환 탭 바인딩

@@ -13,8 +13,122 @@
 </head>
 <body class="dark-theme">
 
-  <!-- 메인 레이아웃 컨테이너 -->
-  <div class="app-container">
+  <!-- 인증 뷰 (로그인 / 회원가입) -->
+  <div id="auth-view" class="auth-container active">
+    <div class="auth-card">
+      <div class="auth-header">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad-auth)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="url(#logo-grad-auth)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="url(#logo-grad-auth)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="logo-grad-auth" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#00f2fe"/>
+              <stop offset="1" stop-color="#4facfe"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <h2>BUSAN TOURISM PMS</h2>
+        <p>통합 사업관리 솔루션에 오신 것을 환영합니다.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-target="login-form">로그인</button>
+        <button class="auth-tab" data-target="signup-form">회원가입</button>
+      </div>
+
+      <div class="auth-forms">
+        <!-- 로그인 폼 -->
+        <form id="login-form" class="auth-form active">
+          <div class="form-group">
+            <label for="login-id">아이디 (UserID)</label>
+            <input type="text" id="login-id" placeholder="아이디를 입력하세요" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">로그인</button>
+        </form>
+
+        <!-- 회원가입 폼 -->
+        <form id="signup-form" class="auth-form">
+          <div class="form-group">
+            <label>가입 유형</label>
+            <div class="role-radio-group">
+              <label class="radio-label">
+                <input type="radio" name="signup-role" value="Intern" checked> 청년 (인턴)
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="signup-role" value="Company"> 기업
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="signup-role" value="Operator"> 관리자
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-id">희망 아이디 (UserID)</label>
+            <input type="text" id="signup-id" placeholder="사용할 아이디" required>
+          </div>
+
+          <!-- 청년용 추가 필드 -->
+          <div id="signup-intern-fields" class="signup-dynamic-fields active">
+            <div class="form-group">
+              <label for="signup-intern-name">성명</label>
+              <input type="text" id="signup-intern-name" placeholder="홍길동">
+            </div>
+            <div class="form-group">
+              <label for="signup-intern-phone">연락처</label>
+              <input type="text" id="signup-intern-phone" placeholder="010-0000-0000">
+            </div>
+            <div class="form-group">
+              <label for="signup-intern-birth">생년월일</label>
+              <input type="date" id="signup-intern-birth">
+            </div>
+            <div class="form-group">
+              <label for="signup-intern-email">이메일</label>
+              <input type="email" id="signup-intern-email" placeholder="example@email.com">
+            </div>
+          </div>
+
+          <!-- 기업용 추가 필드 -->
+          <div id="signup-company-fields" class="signup-dynamic-fields">
+            <div class="form-group">
+              <label for="signup-comp-name">기업명</label>
+              <input type="text" id="signup-comp-name" placeholder="(주)밍글무드">
+            </div>
+            <div class="form-group">
+              <label for="signup-comp-manager">담당자명</label>
+              <input type="text" id="signup-comp-manager" placeholder="김철수">
+            </div>
+            <div class="form-group">
+              <label for="signup-comp-phone">담당자 연락처</label>
+              <input type="text" id="signup-comp-phone" placeholder="010-0000-0000">
+            </div>
+            <div class="form-group">
+              <label for="signup-comp-email">담당자 이메일</label>
+              <input type="email" id="signup-comp-email" placeholder="contact@company.com">
+            </div>
+          </div>
+
+          <!-- 관리자용 추가 필드 -->
+          <div id="signup-operator-fields" class="signup-dynamic-fields">
+            <div class="form-group">
+              <label for="signup-op-name">소속 기관 / 담당자명</label>
+              <input type="text" id="signup-op-name" placeholder="부산관광공사 / 담당자">
+            </div>
+            <div class="form-group">
+              <label for="signup-op-email">이메일</label>
+              <input type="email" id="signup-op-email" placeholder="admin@visitbusan.or.kr">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">가입하기</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 레이아웃 컨테이너 (로그인 시 노출) -->
+  <div class="app-container" id="app-main-content" style="display: none;">
     
     <!-- 1. 상단 글로벌 네비게이션 헤더 -->
     <header class="app-header">
