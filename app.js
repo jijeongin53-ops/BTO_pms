@@ -572,7 +572,12 @@ function renderInternDashboard() {
   const activeProj = appState.currentProject;
   
   // 1) 텍스트 업데이트
-  document.getElementById("intern-user-name").innerText = "홍길동";
+  const users = db.getTable("Master_Users") || [];
+  const user = users.find(u => u.UserID === appState.currentUser);
+  const displayName = user ? user.Name : appState.currentUser;
+  
+  const nameSpan = document.getElementById("intern-user-name");
+  if (nameSpan) nameSpan.innerText = displayName;
   
   let projTitle = "인턴십 지원 및 매칭 프로그램";
   if (activeProj === "Academy") projTitle = "취창업 아카데미 교육 코스";
