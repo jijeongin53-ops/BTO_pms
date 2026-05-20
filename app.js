@@ -259,6 +259,15 @@ const appState = {
       userDisplay.innerText = `${displayName} (${roleName})`;
     }
     
+    // 대시보드 메인 타이틀 업데이트
+    if (role === "Intern") {
+      document.getElementById("intern-user-name").innerText = displayName;
+    } else if (role === "Company") {
+      document.getElementById("company-user-name").innerText = displayName;
+    } else if (role === "Operator") {
+      document.getElementById("operator-user-name").innerText = displayName;
+    }
+    
     this.updateUI();
   },
 
