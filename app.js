@@ -34,6 +34,10 @@ const DEFAULT_NOTICES = [
   { id: 3, title: "[공모전] 관광 MICE 공모전 기획안 서류 심사 개시 ✈️", date: "2026-05-18", content: "MICE 공모전에 등록한 팀들의 서류 검증이 시작되었습니다. 운영사 권한을 통해 접수된 팀 수 및 관련 제출 증빙 자료들의 통계를 실시간으로 확인하실 수 있습니다." }
 ];
 
+const DEFAULT_ADMIN_DASHBOARD = [
+  { TotalBudget: 250000000, ExecutedBudget: 152000000, RemainingBudget: 98000000, InternGoal: 30, LastUpdated: "2026-05-20 12:00:00" }
+];
+
 // 아카데미 5회차 출석 상세 로그
 const DEFAULT_SESSIONS = [
   { session: 1, name: "1회차 (오리엔테이션)", status: "attended" },
@@ -106,6 +110,9 @@ class PMSDatabase {
     if (!localStorage.getItem("PMS_Application_Status")) {
       localStorage.setItem("PMS_Application_Status", JSON.stringify([]));
     }
+    if (!localStorage.getItem("PMS_Admin_Dashboard")) {
+      localStorage.setItem("PMS_Admin_Dashboard", JSON.stringify([]));
+    }
   }
 
   getTable(tableName) {
@@ -174,6 +181,9 @@ class PMSDatabase {
         }
         if (res.data.Application_Status) {
           localStorage.setItem("PMS_Application_Status", JSON.stringify(res.data.Application_Status));
+        }
+        if (res.data.Admin_Dashboard) {
+          localStorage.setItem("PMS_Admin_Dashboard", JSON.stringify(res.data.Admin_Dashboard));
         }
         
         if (syncBadge) {
@@ -1185,31 +1195,83 @@ async function processFileUpload(file) {
 
 // 9. [운영사 관리자 대시보드] 렌더링 로직
 function renderOperatorDashboard() {
-  // 지표 카드 수치 카운팅 애니메이션 실행
-  animateCounters();
+  // 1) 구글 시트 Admin_Dashboard 탭에서 예산 데이터 읽기
+  const adminData = db.getTable("Admin_Dashboard");
+  const budget = (adminData && adminData.length > 0) ? adminData[0] : DEFAULT_ADMIN_DASHBOARD[0];
+  
+  const totalBudget = Number(budget.TotalBudget) || 0;
+  const executedBudget = Number(budget.ExecutedBudget) || 0;
+  const remainingBudget = totalBudget - executedBudget;
+  const internGoal = Number(budget.InternGoal) || 30;
+  const budgetPercent = totalBudget > 0 ? ((executedBudget / totalBudget) * 100).toFixed(1) : 0;
+  
+  // 2) Project_Status에서 인턴쉽 매칭 데이터 자동 계산
+  const projects = db.getTable("Project_Status") || [];
+  const internProjects = projects.filter(p => p.ProjectType === "Internship");
+  const matchedCount = internProjects.filter(p => p.MatchingStatus === "매칭 완료" || p.MatchingStatus === "면접합격/완료").length;
+  const matchRate = internGoal > 0 ? Math.round((matchedCount / internGoal) * 100) : 0;
+  
+  // 3) Project_Status에서 MICE 공모전 접수 팀 자동 계산
+  const miceProjects = projects.filter(p => p.ProjectType === "Mice");
+  const miceTeamCount = miceProjects.length;
+  
+  // --- DOM 업데이트: 집행 예산 카드 ---
+  animateValue("op-executed-budget", executedBudget);
+  document.getElementById("op-budget-sub").innerText = `전체 예산 ${formatKoreanCurrency(totalBudget)} 대비 ${budgetPercent}%`;
+  document.getElementById("op-budget-bar-fill").style.width = `${Math.min(budgetPercent, 100)}%`;
+  document.getElementById("op-total-budget").innerText = formatKoreanCurrency(totalBudget);
+  document.getElementById("op-remaining-budget").innerText = formatKoreanCurrency(remainingBudget);
+  
+  // --- DOM 업데이트: 인턴쉽 매칭 달성률 카드 ---
+  animateValue("op-match-rate", matchRate);
+  document.getElementById("op-match-sub").innerText = `목표 ${internGoal}명 / 매칭 완료 ${matchedCount}명`;
+  document.getElementById("op-match-bar-fill").style.width = `${Math.min(matchRate, 100)}%`;
+  
+  // --- DOM 업데이트: MICE 공모전 접수 팀 카드 ---
+  animateValue("op-mice-teams", miceTeamCount);
+  const totalMiceParticipants = miceTeamCount * 4; // 팀당 평균 4명 추정
+  document.getElementById("op-mice-sub").innerText = `참가 인원 총 ${totalMiceParticipants}명 접수 완료`;
+  const miceBarPercent = Math.min(miceTeamCount * 2, 100); // 50팀 기준 100%
+  document.getElementById("op-mice-bar-fill").style.width = `${miceBarPercent}%`;
   
   // 전체 서류 목록 테이블 렌더링
   renderOperatorDocsTable();
 }
 
-function animateCounters() {
-  const counters = document.querySelectorAll(".counter");
-  counters.forEach(counter => {
-    const target = +counter.getAttribute("data-target");
-    let count = 0;
-    const speed = target / 40; // 40스텝에 완료
-    
-    const updateCount = () => {
-      count += speed;
-      if (count < target) {
-        counter.innerText = Math.floor(count).toLocaleString();
-        setTimeout(updateCount, 15);
-      } else {
-        counter.innerText = target.toLocaleString();
-      }
-    };
-    updateCount();
-  });
+// 숫자 카운팅 애니메이션 헬퍼
+function animateValue(elementId, target) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  
+  const isLargeNum = target > 1000;
+  let count = 0;
+  const steps = 40;
+  const speed = target / steps;
+  
+  const updateCount = () => {
+    count += speed;
+    if (count < target) {
+      el.innerText = isLargeNum ? Math.floor(count).toLocaleString() : Math.floor(count);
+      setTimeout(updateCount, 15);
+    } else {
+      el.innerText = isLargeNum ? target.toLocaleString() : target;
+    }
+  };
+  updateCount();
+}
+
+// 한국 통화 포맷 헬퍼 (예: 2.5억원, 1억5,200만원 등)
+function formatKoreanCurrency(amount) {
+  if (amount >= 100000000) {
+    const eok = Math.floor(amount / 100000000);
+    const remainder = amount % 100000000;
+    if (remainder === 0) return `${eok}억원`;
+    const man = Math.floor(remainder / 10000);
+    return `${eok}억${man.toLocaleString()}만원`;
+  } else if (amount >= 10000) {
+    return `${Math.floor(amount / 10000).toLocaleString()}만원`;
+  }
+  return `${amount.toLocaleString()}원`;
 }
 
 function renderOperatorDocsTable() {

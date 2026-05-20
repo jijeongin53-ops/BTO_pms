@@ -391,36 +391,41 @@
           <p class="subtitle">3개 사업의 실시간 집행 현황, 매칭율, 제출 서류 검토 및 승인을 원스톱으로 관리합니다.</p>
         </div>
 
-        <!-- 3개 통합 관제 매트릭스 수치 카드 -->
+        <!-- 3개 통합 관제 매트릭스 수치 카드 (구글 시트 연동) -->
         <div class="metrics-row">
           <div class="metric-card glass-card">
             <div class="metric-icon budget">💰</div>
             <div class="metric-details">
               <h4>전체 집행 예산</h4>
-              <div class="metric-value"><span class="counter" data-target="152000000">0</span>원</div>
-              <p class="metric-sub">목표액 2.5억원 대비 60.8%</p>
+              <div class="metric-value"><span id="op-executed-budget">0</span>원</div>
+              <p class="metric-sub" id="op-budget-sub">전체 예산 대비 계산 중...</p>
             </div>
-            <div class="budget-bar"><div class="budget-bar-fill" style="width: 60.8%"></div></div>
+            <div class="budget-bar"><div class="budget-bar-fill" id="op-budget-bar-fill" style="width: 0%"></div></div>
+            <div class="metric-breakdown" style="display:flex; gap:8px; margin-top:10px; font-size:11px; color:var(--text-muted);">
+              <span>전체: <strong id="op-total-budget" style="color:var(--color-primary)">-</strong></span>
+              <span>|</span>
+              <span>잔여: <strong id="op-remaining-budget" style="color:var(--status-success)">-</strong></span>
+            </div>
           </div>
           
           <div class="metric-card glass-card">
             <div class="metric-icon matching">🤝</div>
             <div class="metric-details">
               <h4>인턴쉽 매칭 달성률</h4>
-              <div class="metric-value"><span class="counter" data-target="76">0</span>%</div>
-              <p class="metric-sub">목표 50명 / 매칭 완료 38명</p>
+              <div class="metric-value"><span id="op-match-rate">0</span>%</div>
+              <p class="metric-sub" id="op-match-sub">계산 중...</p>
             </div>
-            <div class="budget-bar"><div class="budget-bar-fill matching" style="width: 76%"></div></div>
+            <div class="budget-bar"><div class="budget-bar-fill matching" id="op-match-bar-fill" style="width: 0%"></div></div>
           </div>
 
           <div class="metric-card glass-card">
             <div class="metric-icon teams">🏆</div>
             <div class="metric-details">
               <h4>MICE 공모전 접수 팀</h4>
-              <div class="metric-value"><span class="counter" data-target="42">0</span>팀</div>
-              <p class="metric-sub">참가 인원 총 168명 접수 완료</p>
+              <div class="metric-value"><span id="op-mice-teams">0</span>팀</div>
+              <p class="metric-sub" id="op-mice-sub">계산 중...</p>
             </div>
-            <div class="budget-bar"><div class="budget-bar-fill teams" style="width: 84%"></div></div>
+            <div class="budget-bar"><div class="budget-bar-fill teams" id="op-mice-bar-fill" style="width: 0%"></div></div>
           </div>
         </div>
 
@@ -481,6 +486,7 @@
           <button class="sheet-tab active" data-sheet="Master_Users">Master_Users (ID/권한)</button>
           <button class="sheet-tab" data-sheet="Project_Status">Project_Status (사업/매칭)</button>
           <button class="sheet-tab" data-sheet="Documents_Log">Documents_Log (서류/드라이브)</button>
+          <button class="sheet-tab" data-sheet="Admin_Dashboard">Admin_Dashboard (예산/지표)</button>
         </div>
         
         <!-- DB 시트 테이블 컨테이너 -->

@@ -70,7 +70,14 @@ function initializeSheets() {
     sheetApply.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime"]);
   }
 
-  // 4) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
+  // 6) Admin_Dashboard 탭 초기화 (관리자 예산 및 목표 인원 관리)
+  var sheetAdmin = ss.getSheetByName("Admin_Dashboard") || ss.insertSheet("Admin_Dashboard");
+  sheetAdmin.clear();
+  sheetAdmin.appendRow(["TotalBudget", "ExecutedBudget", "RemainingBudget", "InternGoal", "LastUpdated"]);
+  var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+  sheetAdmin.appendRow([250000000, 152000000, 98000000, 30, nowStr]);
+
+  // 7) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
   var defaultSheet1 = ss.getSheetByName("시트1");
   var defaultSheet2 = ss.getSheetByName("Sheet1");
   if (defaultSheet1 && ss.getSheets().length > 1) ss.deleteSheet(defaultSheet1);
@@ -92,7 +99,7 @@ function doGet(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // 5개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status"];
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -264,6 +271,28 @@ function doPost(e) {
       ]);
       
       return makeJsonResponse({ success: true, message: "Application submitted successfully" });
+      
+    } else if (action === "updateBudget") {
+      // 관리자 예산 업데이트
+      var sheet = ss.getSheetByName("Admin_Dashboard");
+      if (!sheet) {
+        sheet = ss.insertSheet("Admin_Dashboard");
+        sheet.appendRow(["TotalBudget", "ExecutedBudget", "RemainingBudget", "InternGoal", "LastUpdated"]);
+        sheet.appendRow([0, 0, 0, 30, ""]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      var totalBudget = Number(postData.TotalBudget) || 0;
+      var executedBudget = Number(postData.ExecutedBudget) || 0;
+      var remainingBudget = totalBudget - executedBudget;
+      var internGoal = Number(postData.InternGoal) || 30;
+      
+      sheet.getRange(2, 1).setValue(totalBudget);
+      sheet.getRange(2, 2).setValue(executedBudget);
+      sheet.getRange(2, 3).setValue(remainingBudget);
+      sheet.getRange(2, 4).setValue(internGoal);
+      sheet.getRange(2, 5).setValue(nowStr);
+      
+      return makeJsonResponse({ success: true, message: "Budget updated successfully" });
     }
     
     return makeJsonResponse({ success: false, error: "Unknown action: " + action });
