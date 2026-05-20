@@ -70,8 +70,8 @@ class PMSDatabase {
     // 사용자 요청: 무조건 실시간 연동 켜기 (항상 구글 시트로 전송)
     this.liveMode = true;
     
-    // 로컬 스토리지에 저장된 URL을 우선 사용하되, 없으면 코드에 하드코딩된 URL 사용
-    this.appsScriptUrl = localStorage.getItem("PMS_Apps_Script_URL") || "여기에_사용자님의_구글앱스스크립트_웹앱_URL을_넣어주세요";
+    // 사용자 요청: 배포된 Google Apps Script URL 하드코딩
+    this.appsScriptUrl = "https://script.google.com/macros/s/AKfycbzG049iRQSReR4dBka-KH0_R1InG8MPD5QEHpqROU5RohCECZ4ey9UeRh1PwI3Tp6PQ/exec";
   }
 
   initDatabase() {
