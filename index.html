@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부산관광공사 x 밍글무드 - 통합 사업관리 솔루션 (PMS)</title>
+  <meta name="description" content="부산관광공사와 밍글무드가 함께하는 안티그래비티 기반 통합 사업관리 솔루션(PMS). 인턴십 매칭, 취창업 아카데미, 관광 MICE 공모전 사업을 하나의 통합 플랫폼에서 실시간 구글 시트 DB와 동기화하여 완벽하게 관리합니다.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- 메인 레이아웃 컨테이너 -->
+  <div class="app-container">
+    
+    <!-- 1. 상단 글로벌 네비게이션 헤더 -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#00f2fe"/>
+                <stop offset="1" stop-color="#4facfe"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h1>BUSAN TOURISM <span>PMS</span></h1>
+      </div>
+      
+      <!-- 구글 시트 연결 표시기 및 라이브 연동 컨트롤 -->
+      <div class="sheets-connection-badge-wrapper">
+        <div class="sheets-connection-badge">
+          <div class="pulse-indicator" id="sync-pulse"></div>
+          <div class="sheets-info">
+            <span class="status-label" id="sync-status-label">Google Sheets: Simulator Mode</span>
+            <a href="https://docs.google.com/spreadsheets/d/1izKpNWL9SYATmVTvVygakzZIaCxmb7BoD9XKDY0nsus/edit" target="_blank" class="sheets-link" id="sheets-link-display" title="구글 시트 바로가기">
+              ID: 1izKpNWL...nsus
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+          </div>
+        </div>
+        
+        <!-- 실시간 API 연동 패널 -->
+        <div class="live-sync-panel">
+          <div class="sync-mode-toggle">
+            <label class="switch">
+              <input type="checkbox" id="live-mode-checkbox">
+              <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">실시간 연동 (Live Sync)</span>
+          </div>
+          <div class="url-input-group" id="url-input-container">
+            <input type="text" id="apps-script-url" placeholder="Apps Script Web App URL..." title="Apps Script 웹앱 배포 URL">
+            <button id="btn-connect-sheets" class="btn-sm btn-primary-sm">연결</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 글로벌 스위처 영역 -->
+      <div class="header-controls">
+        <!-- 테마 토글 -->
+        <button id="theme-toggle" class="icon-button" aria-label="테마 전환" title="테마 변경">
+          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        
+        <!-- 권한 선택 (Multi-Role) -->
+        <div class="role-selector-wrapper">
+          <label for="role-select">권한 변경:</label>
+          <div class="select-custom">
+            <select id="role-select">
+              <option value="Intern" selected>인턴 지원자 (홍길동)</option>
+              <option value="Company">참여 기업 (밍글무드)</option>
+              <option value="Operator">총괄 운영사 (부산관광공사 & 밍글무드)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. 사업 전환 탭 바 -->
+    <div class="project-tabs-container">
+      <nav class="project-tabs" role="tablist">
+        <button class="project-tab active" data-project="Internship" role="tab" aria-selected="true">
+          <span class="tab-icon">💼</span>
+          인턴십 지원 및 매칭
+        </button>
+        <button class="project-tab" data-project="Academy" role="tab" aria-selected="false">
+          <span class="tab-icon">🎓</span>
+          취창업 아카데미
+        </button>
+        <button class="project-tab" data-project="Mice" role="tab" aria-selected="false">
+          <span class="tab-icon">✈️</span>
+          관광 MICE 공모전
+        </button>
+      </nav>
+    </div>
+
+    <!-- 3. 대시보드 주 본문 컨텐츠 영역 -->
+    <main class="dashboard-body">
+      
+      <!-- ======================================= -->
+      <!-- [ROLE 1] 인턴 (지원자) 대시보드 뷰 -->
+      <!-- ======================================= -->
+      <section id="intern-dashboard" class="dashboard-view active">
+        <div class="view-intro">
+          <h2>안녕하세요, <span class="highlight-text" id="intern-user-name">홍길동</span>님! 👋</h2>
+          <p class="subtitle">선택하신 <span class="highlight-project-text" id="intern-active-project-name">인턴십 지원 및 매칭 프로그램</span>의 실시간 진행 현황입니다.</p>
+        </div>
+
+        <div class="intern-grid-wrapper" style="position: relative; width: 100%;">
+          <!-- 아카데미 미수료 시 락 오버레이 -->
+          <div id="intern-lock-overlay" class="lock-overlay glass-card flex-center-col" style="display: none;">
+            <div class="lock-icon">🔒</div>
+            <h3>서비스 접근 제한 안내</h3>
+            <p>본 <strong><span id="locked-service-name">인턴십 매칭 프로그램</span></strong>은 <strong>'취창업 아카데미(총 5회)'를 수료</strong>한 청년만 참여할 수 있습니다.</p>
+            <div class="lock-stats-box">
+              <span>현재 나의 아카데미 이수 현황:</span>
+              <strong id="lock-attendance-rate">80% (4 / 5회차 완료)</strong>
+            </div>
+            <button class="btn-sm btn-primary-sm" style="margin-top: 15px; width: auto; padding: 10px 20px;" onclick="switchTabToAcademy()">아카데미 출석 및 수료하러 가기 ➔</button>
+          </div>
+
+          <div class="dashboard-grid" id="intern-grid-content">
+            <!-- 단계별 프로세스 바 (인턴용) -->
+            <div class="dashboard-card span-full glass-card">
+              <div class="card-header">
+                <h3>진행 단계 및 프로세스 파이프라인</h3>
+                <span class="status-badge" id="intern-process-badge">서류심사 중</span>
+              </div>
+              <div class="card-body">
+                <div class="process-pipeline" id="intern-process-pipeline">
+                  <!-- Javascript로 동적 렌더링 예정 -->
+                </div>
+              </div>
+            </div>
+
+            <!-- 좌측: 실시간 참여/매칭 상세 현황 -->
+            <div class="dashboard-card glass-card">
+              <div class="card-header">
+                <h3>실시간 매칭 및 수료 현황</h3>
+              </div>
+              <div class="card-body flex-center-col">
+                <div class="progress-indicator-container">
+                  <!-- SVG circular progress -->
+                  <div class="circle-chart-wrapper">
+                    <svg class="circle-chart" viewBox="0 0 36 36">
+                      <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="circle-fill" id="intern-progress-circle" stroke-dasharray="25, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="circle-percentage">
+                      <span id="intern-progress-value">25%</span>
+                    </div>
+                  </div>
+                  <div class="indicator-desc">
+                    <h4 id="intern-indicator-title">서류 통과 확률</h4>
+                    <p id="intern-indicator-desc">총 지원한 4개사 중 1개사 서류 합격</p>
+                  </div>
+                </div>
+                
+                <!-- 아카데미/공모전 특화 정보 -->
+                <div class="intern-detail-widget" id="intern-project-specs">
+                  <!-- Javascript 동적 로딩 -->
+                </div>
+              </div>
+            </div>
+
+            <!-- 우측: 안내 및 알림판 (운영사 공지 연계) -->
+            <div class="dashboard-card glass-card">
+              <div class="card-header">
+                <h3>공지사항 & 운영 안내</h3>
+                <span class="live-tag">LIVE</span>
+              </div>
+              <div class="card-body">
+                <div class="notice-board" id="intern-notice-board">
+                  <!-- 공지사항 렌더링 -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================= -->
+      <!-- [ROLE 2] 기업 (참여 기관) 대시보드 뷰 -->
+      <!-- ======================================= -->
+      <section id="company-dashboard" class="dashboard-view">
+        <div class="view-intro">
+          <h2>참여 기관 대시보드 : <span class="highlight-text">밍글무드 (Company)</span> 🏢</h2>
+          <p class="subtitle">제출 서류 관리와 지원 인턴 매칭 현황을 실시간으로 확인하고 평가합니다.</p>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- 좌측: 증빙 서류 업로드 컴포넌트 -->
+          <div class="dashboard-card glass-card">
+            <div class="card-header">
+              <h3>증빙 서류 제출 및 업로드</h3>
+              <span class="info-tip" title="파일이 업로드되면 지정된 구글 드라이브에 저장되고 구글 시트 Documents_Log에 기입됩니다.">안내</span>
+            </div>
+            <div class="card-body">
+              <div class="file-upload-section">
+                <!-- Drag and drop zone -->
+                <div class="drag-drop-zone" id="file-drag-zone">
+                  <input type="file" id="real-file-input" style="display: none;" accept=".pdf,.png,.jpg,.jpeg,.zip">
+                  <div class="upload-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  </div>
+                  <p class="upload-prompt">서류를 드래그하거나 <span>파일 탐색기 열기</span></p>
+                  <p class="upload-limit">PDF, ZIP, 이미지 최대 50MB</p>
+                </div>
+                
+                <!-- 문서 정규화 네이밍 옵션 -->
+                <div class="document-type-selector">
+                  <label for="doc-type-select">제출 서류 종류:</label>
+                  <div class="select-custom">
+                    <select id="doc-type-select">
+                      <option value="사업자등록증">사업자등록증</option>
+                      <option value="참여신청서">참여신청서</option>
+                      <option value="매칭협약서">매칭협약서</option>
+                      <option value="인턴출근부">인턴출근부</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- 제출된 서류 리스트 (기업 기준) -->
+                <div class="submitted-docs-list">
+                  <h4>제출 문서 목록</h4>
+                  <div id="company-docs-container">
+                    <!-- 서류 목록 렌더링 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 우측: 매칭 인턴 관리 뷰 -->
+          <div class="dashboard-card glass-card">
+            <div class="card-header">
+              <h3>매칭 신청 인턴 심사 & 관리</h3>
+              <div class="card-badge" id="company-matching-badge">배정: 3명 / 총 5명</div>
+            </div>
+            <div class="card-body">
+              <div class="intern-list-section">
+                <p class="section-desc">우리 기업에 배정되거나 지원한 인턴 이력서 리스트입니다. 면접 결과를 변경하면 구글 시트에 즉시 반영됩니다.</p>
+                <div class="intern-cards-grid" id="company-intern-cards">
+                  <!-- 인턴 카드 리스트 렌더링 -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================= -->
+      <!-- [ROLE 3] 용역사 (총괄 운영사) 관리자 뷰 -->
+      <!-- ======================================= -->
+      <section id="operator-dashboard" class="dashboard-view">
+        <div class="view-intro">
+          <h2>총괄 운영 관리 시스템 : <span class="highlight-text">부산관광공사 & 밍글무드 (Operator)</span> 👑</h2>
+          <p class="subtitle">3개 사업의 실시간 집행 현황, 매칭율, 제출 서류 검토 및 승인을 원스톱으로 관리합니다.</p>
+        </div>
+
+        <!-- 3개 통합 관제 매트릭스 수치 카드 -->
+        <div class="metrics-row">
+          <div class="metric-card glass-card">
+            <div class="metric-icon budget">💰</div>
+            <div class="metric-details">
+              <h4>전체 집행 예산</h4>
+              <div class="metric-value"><span class="counter" data-target="152000000">0</span>원</div>
+              <p class="metric-sub">목표액 2.5억원 대비 60.8%</p>
+            </div>
+            <div class="budget-bar"><div class="budget-bar-fill" style="width: 60.8%"></div></div>
+          </div>
+          
+          <div class="metric-card glass-card">
+            <div class="metric-icon matching">🤝</div>
+            <div class="metric-details">
+              <h4>인턴쉽 매칭 달성률</h4>
+              <div class="metric-value"><span class="counter" data-target="76">0</span>%</div>
+              <p class="metric-sub">목표 50명 / 매칭 완료 38명</p>
+            </div>
+            <div class="budget-bar"><div class="budget-bar-fill matching" style="width: 76%"></div></div>
+          </div>
+
+          <div class="metric-card glass-card">
+            <div class="metric-icon teams">🏆</div>
+            <div class="metric-details">
+              <h4>MICE 공모전 접수 팀</h4>
+              <div class="metric-value"><span class="counter" data-target="42">0</span>팀</div>
+              <p class="metric-sub">참가 인원 총 168명 접수 완료</p>
+            </div>
+            <div class="budget-bar"><div class="budget-bar-fill teams" style="width: 84%"></div></div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid span-full">
+          <!-- 제출 서류 검토 및 승인 툴 -->
+          <div class="dashboard-card span-full glass-card">
+            <div class="card-header">
+              <h3>전체 서류 검토 및 승인 워크플로우</h3>
+              <div class="card-actions">
+                <span class="live-tag">REALTIME SYNC</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="pms-table" id="operator-docs-table">
+                  <thead>
+                    <tr>
+                      <th>문서 ID</th>
+                      <th>제출자(기업)</th>
+                      <th>서류 종류</th>
+                      <th>정규화된 파일명</th>
+                      <th>구글드라이브 저장 경로</th>
+                      <th>승인 상태</th>
+                      <th>처리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Javascript를 통해 실시간 문서 기록 로딩 -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 4. 실시간 구글 시트 DB 라이브 모니터 (하단 슬라이딩 패널) -->
+    <footer class="db-monitor-panel">
+      <div class="monitor-header" id="monitor-toggle-btn">
+        <div class="monitor-title">
+          <span class="sheet-icon">📊</span>
+          <h3>Google Sheets Real-Time Database Simulator</h3>
+          <span class="active-sheet-id" title="실제 사용자가 매칭한 구글 시트 ID">Active Sheets ID: <strong id="current-sheet-id">1izKpNWL9SYATmVTvVygakzZIaCxmb7BoD9XKDY0nsus</strong></span>
+        </div>
+        <div class="monitor-actions">
+          <span class="sync-badge"><span class="indicator-glow"></span>CONNECTED</span>
+          <button class="expand-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="monitor-body">
+        <!-- DB 시트 탭 -->
+        <div class="sheet-tabs">
+          <button class="sheet-tab active" data-sheet="Master_Users">Master_Users (ID/권한)</button>
+          <button class="sheet-tab" data-sheet="Project_Status">Project_Status (사업/매칭)</button>
+          <button class="sheet-tab" data-sheet="Documents_Log">Documents_Log (서류/드라이브)</button>
+        </div>
+        
+        <!-- DB 시트 테이블 컨테이너 -->
+        <div class="sheet-table-wrapper">
+          <table class="sheet-table" id="sheets-emulator-table">
+            <thead>
+              <!-- JS 동적 헤더 -->
+            </thead>
+            <tbody>
+              <!-- JS 동적 셀 데이터 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </footer>
+
+    <!-- 이력서 / 상세 정보 모달 팝업 -->
+    <div class="modal" id="pms-modal">
+      <div class="modal-content glass-card">
+        <span class="close-modal">&times;</span>
+        <div id="modal-body-content">
+          <!-- 모달 내용 동적 생성 -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
