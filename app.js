@@ -28,11 +28,7 @@ const DEFAULT_DOCUMENTS = [
   { DocID: "DOC-003", UserID: "company_01", CompanyName: "밍글무드", DocType: "매칭협약서", OriginalName: "agreement_draft.pdf", SavedName: "[인턴십]_[밍글무드]_[매칭협약서]_20260520.pdf", DriveURL: "https://drive.google.com/open?id=1K_L_M_Drive_Agreement", Status: "Rejected", UploadedTime: "2026-05-20 09:12:00" }
 ];
 
-const DEFAULT_NOTICES = [
-  { id: 1, title: "[일반] 3개 통합 PMS 대시보드 오픈 안내 🚀", date: "2026-05-20", content: "부산관광공사 x 밍글무드 통합 PMS 플랫폼이 정식 런칭되었습니다. 현재 보시는 화면은 실시간 구글 시트 ID 1izKpNWL9SYATmVTvVygakzZIaCxmb7BoD9XKDY0nsus 와 연동 시뮬레이션 중이며, 데이터의 모든 가상 변경 사항이 실시간 동기화됩니다." },
-  { id: 2, title: "[인턴십] 기업 평가 및 면접 결과 입력 가이드 💼", date: "2026-05-19", content: "기업 담당자님께서는 '참여 기업 대시보드'로 전환하신 후 배정 인턴 리스트에서 이력서를 확인하고 면접 결과(합격/불합격)를 입력해 주세요. 데이터는 구글 시트에 즉시 반영됩니다." },
-  { id: 3, title: "[공모전] 관광 MICE 공모전 기획안 서류 심사 개시 ✈️", date: "2026-05-18", content: "MICE 공모전에 등록한 팀들의 서류 검증이 시작되었습니다. 운영사 권한을 통해 접수된 팀 수 및 관련 제출 증빙 자료들의 통계를 실시간으로 확인하실 수 있습니다." }
-];
+const DEFAULT_NOTICES = [];
 
 const DEFAULT_ADMIN_DASHBOARD = [
   { TotalBudget: 250000000, ExecutedBudget: 152000000, RemainingBudget: 98000000, InternGoal: 30, LastUpdated: "2026-05-20 12:00:00" }
@@ -184,6 +180,9 @@ class PMSDatabase {
         }
         if (res.data.Admin_Dashboard) {
           localStorage.setItem("PMS_Admin_Dashboard", JSON.stringify(res.data.Admin_Dashboard));
+        }
+        if (res.data.Notices) {
+          localStorage.setItem("PMS_Notices", JSON.stringify(res.data.Notices));
         }
         
         if (syncBadge) {
@@ -813,23 +812,31 @@ function renderInternDashboard() {
     `;
   }
 
-  // 6) 공지사항 로딩
-  const notices = db.getTable("Notices");
+  // 6) 공지사항 로딩 (현재 프로젝트 타입 및 전체 공지만 필터링)
+  const notices = db.getTable("Notices") || [];
   const noticeBoard = document.getElementById("intern-notice-board");
   noticeBoard.innerHTML = "";
   
-  notices.forEach(notice => {
-    const item = document.createElement("div");
-    item.className = "notice-item";
-    item.innerHTML = `
-      <div class="notice-title">
-        <span>${notice.title}</span>
-        <span class="notice-date">${notice.date}</span>
-      </div>
-      <div class="notice-content">${notice.content}</div>
-    `;
-    noticeBoard.appendChild(item);
-  });
+  const filteredNotices = notices.filter(n => n.ProjectType === activeProj || n.ProjectType === "All");
+  
+  if (filteredNotices.length === 0) {
+    noticeBoard.innerHTML = `<div class="notice-item"><div class="notice-content" style="text-align:center;">등록된 공지사항이 없습니다.</div></div>`;
+  } else {
+    // 최신순 정렬
+    filteredNotices.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+    filteredNotices.forEach(notice => {
+      const item = document.createElement("div");
+      item.className = "notice-item";
+      item.innerHTML = `
+        <div class="notice-title">
+          <span>${notice.Title}</span>
+          <span class="notice-date">${notice.Date.split(' ')[0]}</span>
+        </div>
+        <div class="notice-content">${notice.Content}</div>
+      `;
+      noticeBoard.appendChild(item);
+    });
+  }
 
   // 7) 아카데미 특화 커리큘럼 표시/숨김
   const curriculumCard = document.getElementById("academy-curriculum-card");
@@ -885,6 +892,55 @@ window.attendSession = async function(sessionNum) {
     appState.currentSheet = "Project_Status";
     renderSheetsEmulator(appState.currentUser);
   }
+};
+
+// --- [운영사 공지사항 등록 액션] ---
+window.submitNotice = async function(event) {
+  event.preventDefault();
+  const typeSelect = document.getElementById("notice-type-select");
+  const titleInput = document.getElementById("notice-title-input");
+  const contentInput = document.getElementById("notice-content-input");
+  
+  const projectType = typeSelect.value;
+  const title = titleInput.value.trim();
+  const content = contentInput.value.trim();
+  
+  if (!title || !content) {
+    alert("제목과 내용을 모두 입력해 주세요.");
+    return;
+  }
+  
+  const notices = db.getTable("Notices") || [];
+  const nowStr = getNowDateString();
+  const noticeId = "NOTICE-LOCAL-" + Date.now();
+  
+  const postData = {
+    action: "addNotice",
+    ProjectType: projectType,
+    Title: title,
+    Content: content
+  };
+  
+  notices.push({
+    NoticeID: noticeId,
+    ProjectType: projectType,
+    Title: title,
+    Content: content,
+    Date: nowStr
+  });
+  
+  db.saveTable("Notices", notices);
+  
+  if (db.liveMode) {
+    await db.writeToGoogleSheets(postData);
+  }
+  
+  alert("공지사항이 성공적으로 등록되었습니다.");
+  titleInput.value = "";
+  contentInput.value = "";
+  
+  appState.currentSheet = "Notices";
+  renderSheetsEmulator(appState.currentUser);
 };
 
 // --- [사업 신청 액션] ---

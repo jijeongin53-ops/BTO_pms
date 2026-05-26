@@ -491,6 +491,38 @@
               </div>
             </div>
           </div>
+
+          <!-- 공지사항 관리 및 등록 툴 -->
+          <div class="dashboard-card span-full glass-card">
+            <div class="card-header">
+              <h3>공지사항 & 운영 안내 등록</h3>
+              <span class="status-badge pending" style="background:var(--color-primary); color:black;">Notice Mgmt</span>
+            </div>
+            <div class="card-body">
+              <form id="operator-notice-form" onsubmit="window.submitNotice(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display: flex; gap: 15px; align-items: center;">
+                  <label style="font-size: 13px; font-weight: 700; width: 100px;">카테고리</label>
+                  <select id="notice-type-select" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border-card); font-family: inherit;">
+                    <option value="All">전체 공통</option>
+                    <option value="Internship">인턴십 지원 및 매칭</option>
+                    <option value="Academy">취창업 아카데미</option>
+                    <option value="Mice">관광 MICE 공모전</option>
+                  </select>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                  <label style="font-size: 13px; font-weight: 700; width: 100px;">공지 제목</label>
+                  <input type="text" id="notice-title-input" placeholder="제목을 입력하세요 (예: [일반] 3개 통합 시스템 안내)" style="flex: 1; padding: 10px; border-radius: 4px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border-card); font-family: inherit;" required>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: flex-start;">
+                  <label style="font-size: 13px; font-weight: 700; width: 100px; margin-top: 10px;">상세 내용</label>
+                  <textarea id="notice-content-input" placeholder="공지할 상세 내용을 작성하세요." style="flex: 1; padding: 10px; border-radius: 4px; min-height: 100px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border-card); font-family: inherit; resize: vertical;" required></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                  <button type="submit" class="btn-primary-sm" style="padding: 10px 24px; font-size: 14px; cursor: pointer;">구글 시트 연동 및 공지 등록</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </section>
 

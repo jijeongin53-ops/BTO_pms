@@ -84,6 +84,12 @@ function initializeSheets() {
   var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
   sheetAdmin.appendRow([250000000, 152000000, 98000000, 30, nowStr]);
 
+  // 7) Notices 탭 초기화 (공지사항 관리용)
+  var sheetNotices = ss.getSheetByName("Notices") || ss.insertSheet("Notices");
+  if (sheetNotices.getLastRow() === 0) {
+    sheetNotices.appendRow(["NoticeID", "ProjectType", "Title", "Content", "Date"]);
+  }
+
   // 7) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
   var defaultSheet1 = ss.getSheetByName("시트1");
   var defaultSheet2 = ss.getSheetByName("Sheet1");
@@ -105,8 +111,8 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 5개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard"];
+    // 7개 탭에서 데이터를 읽어와 JSON으로 반환
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -149,7 +155,26 @@ function doPost(e) {
     var action = postData.action;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    if (action === "updateProject") {
+    if (action === "addNotice") {
+      var sheet = ss.getSheetByName("Notices");
+      if (!sheet) {
+        sheet = ss.insertSheet("Notices");
+        sheet.appendRow(["NoticeID", "ProjectType", "Title", "Content", "Date"]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      var noticeId = "NOTICE-" + Date.now();
+      
+      sheet.appendRow([
+        noticeId,
+        postData.ProjectType || "All",
+        postData.Title || "",
+        postData.Content || "",
+        nowStr
+      ]);
+      
+      return makeJsonResponse({ success: true, message: "Notice added successfully" });
+      
+    } else if (action === "updateProject") {
       // 프로젝트 상태 업데이트 (또는 없으면 추가)
       var sheet = ss.getSheetByName("Project_Status");
       var values = sheet.getDataRange().getValues();
