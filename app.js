@@ -1321,9 +1321,9 @@ function renderOperatorDashboard() {
   const matchedCount = internProjects.filter(p => p.MatchingStatus === "매칭 완료" || p.MatchingStatus === "면접합격/완료").length;
   const matchRate = internGoal > 0 ? Math.round((matchedCount / internGoal) * 100) : 0;
   
-  // 3) Project_Status에서 MICE 공모전 접수 팀 자동 계산
-  const miceProjects = projects.filter(p => p.ProjectType === "Mice");
-  const miceTeamCount = miceProjects.length;
+  // 3) Application_Status에서 MICE 공모전 접수 팀 자동 계산
+  const applications = db.getTable("Application_Status") || [];
+  const miceTeamCount = applications.filter(a => a.ProjectType === "Mice").length;
   
   // --- DOM 업데이트: 집행 예산 카드 ---
   animateValue("op-executed-budget", executedBudget);
