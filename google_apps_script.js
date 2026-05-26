@@ -144,6 +144,14 @@ function doGet(e) {
         for (var j = 0; j < headers.length; j++) {
           rowData[headers[j]] = values[i][j];
         }
+        // 하위 호환성: 헤더에 Password가 없다면 강제로 세팅
+        if (headers.indexOf("Password") === -1) {
+          if (sheetName === "Master_Users" && values[i].length >= 5) {
+            rowData["Password"] = values[i][4];
+          } else if (sheetName === "Registered_Users" && values[i].length >= 10) {
+            rowData["Password"] = values[i][8];
+          }
+        }
         rows.push(rowData);
       }
       result[sheetName] = rows;
@@ -341,6 +349,10 @@ function doPost(e) {
       
       // 즉시 로그인을 위해 Master_Users 에도 등록
       var masterSheet = ss.getSheetByName("Master_Users");
+      if (!masterSheet) {
+        masterSheet = ss.insertSheet("Master_Users");
+        masterSheet.appendRow(["UserID", "Name", "Role", "Email", "Password", "ActiveState"]);
+      }
       var displayName = postData.Role === "Company" ? postData.CompanyName : postData.Name;
       masterSheet.appendRow([
         postData.UserID,

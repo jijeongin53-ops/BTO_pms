@@ -75,16 +75,7 @@ class PMSDatabase {
   }
 
   initDatabase() {
-    // 기존 LocalStorage에 이전 기관명(더휴랩, 부산 로컬투어) 등 이전 데이터가 남아있을 경우 자동 동기화 갱신 처리
-    const masterUsersRaw = localStorage.getItem("PMS_Master_Users");
-    if (masterUsersRaw && (masterUsersRaw.includes("더휴랩") || masterUsersRaw.includes("부산 로컬투어") || !masterUsersRaw.includes("밍글무드") || masterUsersRaw.includes("contact@busantour.com"))) {
-      localStorage.removeItem("PMS_Master_Users");
-      localStorage.removeItem("PMS_Project_Status");
-      localStorage.removeItem("PMS_Documents_Log");
-      localStorage.removeItem("PMS_Notices");
-      localStorage.removeItem("PMS_Academy_Sessions");
-    }
-
+    // Legacy wipe logic removed to prevent race conditions and data loss
     if (!localStorage.getItem("PMS_Master_Users")) {
       localStorage.setItem("PMS_Master_Users", JSON.stringify([]));
     }
