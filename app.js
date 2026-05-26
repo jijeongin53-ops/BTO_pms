@@ -98,11 +98,11 @@ class PMSDatabase {
     if (!localStorage.getItem("PMS_Documents_Log")) {
       localStorage.setItem("PMS_Documents_Log", JSON.stringify([]));
     }
-    if (!localStorage.getItem("PMS_Notices")) {
-      localStorage.setItem("PMS_Notices", JSON.stringify([]));
+    if (!localStorage.getItem("PMS_Notices") || localStorage.getItem("PMS_Notices") === "[]") {
+      localStorage.setItem("PMS_Notices", JSON.stringify(DEFAULT_NOTICES));
     }
-    if (!localStorage.getItem("PMS_Academy_Sessions")) {
-      localStorage.setItem("PMS_Academy_Sessions", JSON.stringify([]));
+    if (!localStorage.getItem("PMS_Academy_Sessions") || localStorage.getItem("PMS_Academy_Sessions") === "[]") {
+      localStorage.setItem("PMS_Academy_Sessions", JSON.stringify(DEFAULT_SESSIONS));
     }
     if (!localStorage.getItem("PMS_Registered_Users")) {
       localStorage.setItem("PMS_Registered_Users", JSON.stringify([]));
@@ -742,9 +742,13 @@ function renderInternDashboard() {
     `;
   } else if (activeProj === "Academy") {
     // 아카데미 출석 수 및 참여율 계산
-    const sessions = db.getTable("Academy_Sessions");
+    const sessions = db.getTable("Academy_Sessions") || DEFAULT_SESSIONS;
     const attendedCount = sessions.filter(s => s.status === "attended").length;
     const rate = (attendedCount / 5 * 100).toFixed(0);
+    
+    // 원형 차트도 rate에 맞춤
+    progressVal.innerText = `${rate}%`;
+    progressCircle.setAttribute("stroke-dasharray", `${rate}, 100`);
 
     indicatorTitle.innerText = "아카데미 수료 진척도";
     indicatorDesc.innerText = `총 5회차 중 ${attendedCount}회 출석 (${rate}% 참여율)`;
