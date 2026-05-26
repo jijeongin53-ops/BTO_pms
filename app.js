@@ -1480,19 +1480,27 @@ function renderOperatorAcademyAttendance() {
   const tbody = document.querySelector("#operator-academy-attendance-table tbody");
   if (!tbody) return;
   
-  const projects = db.getTable("Project_Status");
-  const users = db.getTable("Master_Users");
+  const applications = db.getTable("Application_Status") || [];
+  const users = db.getTable("Master_Users") || [];
   const attendance = db.getTable("Academy_Attendance") || [];
   
-  const academyYouths = projects.filter(p => p.ProjectType === "Academy");
+  // 아카데미에 실제 신청한 유저만 필터링 (중복 제거)
+  const academyYouths = applications.filter(a => a.ProjectType === "Academy");
+  const uniqueYouths = [];
+  academyYouths.forEach(app => {
+    if (!uniqueYouths.find(u => u.UserID === app.UserID)) {
+      uniqueYouths.push(app);
+    }
+  });
+  
   tbody.innerHTML = "";
   
-  if (academyYouths.length === 0) {
+  if (uniqueYouths.length === 0) {
     tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">아카데미 수강생이 없습니다.</td></tr>`;
     return;
   }
   
-  academyYouths.forEach(proj => {
+  uniqueYouths.forEach(proj => {
     const user = users.find(u => u.UserID === proj.UserID) || { Name: "알수없음" };
     const myAtt = attendance.find(a => a.UserID === proj.UserID) || { Session1:0, Session2:0, Session3:0, Session4:0, Session5:0 };
     
