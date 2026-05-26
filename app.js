@@ -349,7 +349,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = users.find(u => u.UserID === userId);
     
     if (user) {
-      if (user.Password && user.Password !== password) {
+      if (user.Password && String(user.Password) !== password) {
         alert("비밀번호가 일치하지 않습니다.");
         return;
       }
