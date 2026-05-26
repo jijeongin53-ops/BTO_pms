@@ -1615,3 +1615,95 @@ function getNowDateCompact() {
   const d = new Date();
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}_${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
 }
+
+// 12. 팝업(모달) 관련 기능 (window 전역 객체에 명시적 할당)
+window.openInquiryModal = function() {
+  const modal = document.getElementById("inquiry-modal");
+  if (modal) {
+    modal.style.display = "flex";
+    setTimeout(() => { modal.style.opacity = "1"; }, 10);
+  }
+};
+
+window.closeInquiryModal = function() {
+  const modal = document.getElementById("inquiry-modal");
+  if (modal) {
+    modal.style.opacity = "0";
+    setTimeout(() => { modal.style.display = "none"; }, 300);
+  }
+};
+
+window.submitInquiry = async function() {
+  const title = document.getElementById("inquiry-title").value.trim();
+  const content = document.getElementById("inquiry-content").value.trim();
+  
+  if (!title || !content) {
+    alert("제목과 내용을 모두 입력해주세요.");
+    return;
+  }
+  
+  const postData = {
+    action: "submitInquiry",
+    UserID: appState.currentUser,
+    Role: appState.currentRole,
+    Title: title,
+    Content: content
+  };
+  
+  try {
+    const btn = document.querySelector("#inquiry-modal .btn-primary-sm");
+    btn.disabled = true;
+    btn.innerText = "전송중...";
+    
+    if (db.liveMode && db.appsScriptUrl) {
+      const response = await fetch(db.appsScriptUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(postData)
+      });
+      const res = await response.json();
+      if (res.success) {
+        alert("관리자에게 문의가 전송되었습니다.");
+        document.getElementById("inquiry-title").value = "";
+        document.getElementById("inquiry-content").value = "";
+        window.closeInquiryModal();
+      } else {
+        alert("문의 전송 중 오류가 발생했습니다: " + res.error);
+      }
+    } else {
+      alert("현재 로컬 모드입니다. Live 연동을 켜주세요.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("네트워크 오류가 발생했습니다.");
+  } finally {
+    const btn = document.querySelector("#inquiry-modal .btn-primary-sm");
+    btn.disabled = false;
+    btn.innerText = "보내기";
+  }
+};
+
+window.openNoticeModal = function(arg1, content, date) {
+  const modal = document.getElementById("notice-modal");
+  if (modal) {
+    if (typeof arg1 === "object") {
+      document.getElementById("notice-modal-title").innerText = arg1.Title;
+      document.getElementById("notice-modal-content").innerHTML = arg1.Content.replace(/\n/g, '<br>');
+      document.getElementById("notice-modal-date").innerText = arg1.Date;
+    } else {
+      document.getElementById("notice-modal-title").innerText = arg1;
+      document.getElementById("notice-modal-content").innerHTML = content.replace(/\n/g, '<br>');
+      document.getElementById("notice-modal-date").innerText = date;
+    }
+    modal.style.display = "flex";
+    setTimeout(() => { modal.style.opacity = "1"; }, 10);
+  }
+};
+
+window.closeNoticeModal = function() {
+  const modal = document.getElementById("notice-modal");
+  if (modal) {
+    modal.style.opacity = "0";
+    setTimeout(() => { modal.style.display = "none"; }, 300);
+  }
+};

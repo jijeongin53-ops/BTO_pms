@@ -19,44 +19,16 @@ function initializeSheets() {
   var sheetUsers = ss.getSheetByName("Master_Users") || ss.insertSheet("Master_Users");
   sheetUsers.clear();
   sheetUsers.appendRow(["UserID", "Name", "Role", "Email", "Password", "ActiveState"]);
-  var initialUsers = [
-    ["intern_01", "홍길동", "Intern", "hong@gmail.com", "", "Active"],
-    ["intern_02", "김영희", "Intern", "young@gmail.com", "", "Active"],
-    ["intern_03", "이철수", "Intern", "chul@gmail.com", "", "Active"],
-    ["company_01", "밍글무드", "Company", "contact@minglemood.com", "", "Active"],
-    ["operator_01", "부산관광공사 & 밍글무드", "Operator", "pms@visitbusan.or.kr", "", "Active"]
-  ];
-  initialUsers.forEach(function(row) {
-    sheetUsers.appendRow(row);
-  });
   
   // 2) Project_Status 탭 초기화
   var sheetProjects = ss.getSheetByName("Project_Status") || ss.insertSheet("Project_Status");
   sheetProjects.clear();
   sheetProjects.appendRow(["ProjectType", "UserID", "Stage", "MatchingStatus", "ProgressPercent", "RegistrationNo", "UpdateTime"]);
-  var initialProjects = [
-    ["Internship", "intern_01", "서류심사", "심사 중", "25", "N/A", "2026-05-20 10:00:00"],
-    ["Academy", "intern_01", "수강중", "진행중", "80", "N/A", "2026-05-19 14:00:00"],
-    ["Mice", "intern_01", "모집공고", "신청 대기", "10", "MICE-2026-0042", "2026-05-20 09:30:00"],
-    ["Internship", "intern_02", "최종매칭", "매칭 완료", "100", "N/A", "2026-05-18 11:20:00"],
-    ["Internship", "intern_03", "면접전형", "면접 대기", "50", "N/A", "2026-05-20 08:15:00"]
-  ];
-  initialProjects.forEach(function(row) {
-    sheetProjects.appendRow(row);
-  });
   
   // 3) Documents_Log 탭 초기화
   var sheetDocs = ss.getSheetByName("Documents_Log") || ss.insertSheet("Documents_Log");
   sheetDocs.clear();
   sheetDocs.appendRow(["DocID", "UserID", "CompanyName", "DocType", "OriginalName", "SavedName", "DriveURL", "Status", "UploadedTime"]);
-  var initialDocs = [
-    ["DOC-001", "company_01", "밍글무드", "사업자등록증", "biz_license_2026.pdf", "[인턴십]_[밍글무드]_[사업자등록증]_20260518.pdf", "https://drive.google.com/open?id=1A_B_C_Drive_Biz", "Approved", "2026-05-18 10:15:00"],
-    ["DOC-002", "company_01", "밍글무드", "참여신청서", "apply_form_minglemood.docx", "[인턴십]_[밍글무드]_[참여신청서]_20260519.pdf", "https://drive.google.com/open?id=1X_Y_Z_Drive_Apply", "Pending", "2026-05-19 14:30:00"],
-    ["DOC-003", "company_01", "밍글무드", "매칭협약서", "agreement_draft.pdf", "[인턴십]_[밍글무드]_[매칭협약서]_20260520.pdf", "https://drive.google.com/open?id=1K_L_M_Drive_Agreement", "Rejected", "2026-05-20 09:12:00"]
-  ];
-  initialDocs.forEach(function(row) {
-    sheetDocs.appendRow(row);
-  });
 
   // 4) Registered_Users 탭 초기화 (신규 가입자 저장용)
   var sheetReg = ss.getSheetByName("Registered_Users") || ss.insertSheet("Registered_Users");
@@ -94,8 +66,6 @@ function initializeSheets() {
   var sheetAttendance = ss.getSheetByName("Academy_Attendance") || ss.insertSheet("Academy_Attendance");
   if (sheetAttendance.getLastRow() === 0) {
     sheetAttendance.appendRow(["UserID", "Name", "Session1", "Session2", "Session3", "Session4", "Session5"]);
-    // 초기 더미데이터 (intern_01)
-    sheetAttendance.appendRow(["intern_01", "홍길동", 1, 1, 1, 1, 0]);
   }
 
   // 9) Inquiries 탭 초기화 (관리자 문의하기)
