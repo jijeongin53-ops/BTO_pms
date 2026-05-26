@@ -90,6 +90,14 @@ function initializeSheets() {
     sheetNotices.appendRow(["NoticeID", "ProjectType", "Title", "Content", "Date"]);
   }
 
+  // 8) Academy_Attendance 탭 초기화 (아카데미 출석부)
+  var sheetAttendance = ss.getSheetByName("Academy_Attendance") || ss.insertSheet("Academy_Attendance");
+  if (sheetAttendance.getLastRow() === 0) {
+    sheetAttendance.appendRow(["UserID", "Name", "Session1", "Session2", "Session3", "Session4", "Session5"]);
+    // 초기 더미데이터 (intern_01)
+    sheetAttendance.appendRow(["intern_01", "홍길동", 1, 1, 1, 1, 0]);
+  }
+
   // 7) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
   var defaultSheet1 = ss.getSheetByName("시트1");
   var defaultSheet2 = ss.getSheetByName("Sheet1");
@@ -111,8 +119,8 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 7개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices"];
+    // 8개 탭에서 데이터를 읽어와 JSON으로 반환
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices", "Academy_Attendance"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -173,6 +181,60 @@ function doPost(e) {
       ]);
       
       return makeJsonResponse({ success: true, message: "Notice added successfully" });
+      
+    } else if (action === "updateAttendance") {
+      // 아카데미 출석 상태 업데이트
+      var sheet = ss.getSheetByName("Academy_Attendance");
+      var values = sheet.getDataRange().getValues();
+      var foundRow = -1;
+      
+      for (var i = 1; i < values.length; i++) {
+        if (values[i][0] === postData.UserID) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+      
+      if (foundRow !== -1) {
+        // 기존 행 업데이트
+        sheet.getRange(foundRow, 3).setValue(postData.Session1 || 0);
+        sheet.getRange(foundRow, 4).setValue(postData.Session2 || 0);
+        sheet.getRange(foundRow, 5).setValue(postData.Session3 || 0);
+        sheet.getRange(foundRow, 6).setValue(postData.Session4 || 0);
+        sheet.getRange(foundRow, 7).setValue(postData.Session5 || 0);
+      } else {
+        // 새 행 삽입
+        sheet.appendRow([
+          postData.UserID,
+          postData.Name || "",
+          postData.Session1 || 0,
+          postData.Session2 || 0,
+          postData.Session3 || 0,
+          postData.Session4 || 0,
+          postData.Session5 || 0
+        ]);
+      }
+      
+      // Project_Status의 ProgressPercent 도 동기화
+      var projSheet = ss.getSheetByName("Project_Status");
+      var projValues = projSheet.getDataRange().getValues();
+      var projRow = -1;
+      for (var j = 1; j < projValues.length; j++) {
+        if (projValues[j][0] === "Academy" && projValues[j][1] === postData.UserID) {
+          projRow = j + 1;
+          break;
+        }
+      }
+      
+      var attendedCount = (parseInt(postData.Session1)||0) + (parseInt(postData.Session2)||0) + (parseInt(postData.Session3)||0) + (parseInt(postData.Session4)||0) + (parseInt(postData.Session5)||0);
+      var progressStr = (attendedCount * 20).toString();
+      
+      if (projRow !== -1) {
+        projSheet.getRange(projRow, 5).setValue(progressStr); // ProgressPercent 업데이트
+        projSheet.getRange(projRow, 7).setValue(Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss")); // UpdateTime
+      }
+      
+      return makeJsonResponse({ success: true, message: "Attendance updated successfully" });
       
     } else if (action === "updateProject") {
       // 프로젝트 상태 업데이트 (또는 없으면 추가)

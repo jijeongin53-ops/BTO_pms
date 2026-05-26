@@ -741,7 +741,17 @@ function renderInternDashboard() {
     `;
   } else if (activeProj === "Academy") {
     // 아카데미 출석 수 및 참여율 계산
-    const sessions = db.getTable("Academy_Sessions") || DEFAULT_SESSIONS;
+    const allAttendance = db.getTable("Academy_Attendance") || [];
+    const myAttendance = allAttendance.find(a => a.UserID === appState.currentUser) || { Session1:0, Session2:0, Session3:0, Session4:0, Session5:0 };
+    
+    const sessions = [
+      { session: 1, name: "1회차 (오리엔테이션)", status: myAttendance.Session1 == 1 ? "attended" : "pending" },
+      { session: 2, name: "2회차 (실무 기획 세션)", status: myAttendance.Session2 == 1 ? "attended" : "pending" },
+      { session: 3, name: "3회차 (Figma 실습)", status: myAttendance.Session3 == 1 ? "attended" : "pending" },
+      { session: 4, name: "4회차 (UI/UX 멘토링)", status: myAttendance.Session4 == 1 ? "attended" : "pending" },
+      { session: 5, name: "5회차 (최종 프로젝트)", status: myAttendance.Session5 == 1 ? "attended" : "pending" }
+    ];
+    
     const attendedCount = sessions.filter(s => s.status === "attended").length;
     const rate = (attendedCount / 5 * 100).toFixed(0);
     
@@ -759,8 +769,7 @@ function renderInternDashboard() {
       sessionsHTML += `
         <div class="session-block ${isAttended ? 'attended' : 'pending'}">
           <span>${s.name.split(' ')[0]}</span>
-          <span class="session-status-badge ${isAttended ? 'attended' : 'pending'}">${isAttended ? '출석' : '출석체크'}</span>
-          ${!isAttended ? `<button class="btn-sm btn-primary-sm" style="padding:2px 4px; font-size:9px;" onclick="attendSession(${s.session})">출석</button>` : ''}
+          <span class="session-status-badge ${isAttended ? 'attended' : 'pending'}">${isAttended ? '출석완료' : '대기/결석'}</span>
         </div>
       `;
     });
@@ -1323,6 +1332,9 @@ function renderOperatorDashboard() {
   
   // 전체 서류 목록 테이블 렌더링
   renderOperatorDocsTable();
+  
+  // 아카데미 출석 관리 테이블 렌더링
+  renderOperatorAcademyAttendance();
 }
 
 // 숫자 카운팅 애니메이션 헬퍼
@@ -1432,6 +1444,89 @@ window.approveDocument = async function(docID, newStatus) {
     appState.currentSheet = "Documents_Log";
     renderSheetsEmulator(docID);
   }
+};
+
+function renderOperatorAcademyAttendance() {
+  const tbody = document.querySelector("#operator-academy-attendance-table tbody");
+  if (!tbody) return;
+  
+  const projects = db.getTable("Project_Status");
+  const users = db.getTable("Master_Users");
+  const attendance = db.getTable("Academy_Attendance") || [];
+  
+  const academyYouths = projects.filter(p => p.ProjectType === "Academy");
+  tbody.innerHTML = "";
+  
+  if (academyYouths.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">아카데미 수강생이 없습니다.</td></tr>`;
+    return;
+  }
+  
+  academyYouths.forEach(proj => {
+    const user = users.find(u => u.UserID === proj.UserID) || { Name: "알수없음" };
+    const myAtt = attendance.find(a => a.UserID === proj.UserID) || { Session1:0, Session2:0, Session3:0, Session4:0, Session5:0 };
+    
+    const tr = document.createElement("tr");
+    
+    let btnHtml = "";
+    for(let i=1; i<=5; i++) {
+      const isAttended = myAtt[`Session${i}`] == 1;
+      const btnClass = isAttended ? "btn-primary-sm" : "btn-outline-sm";
+      const btnText = isAttended ? "출석" : "대기";
+      const bgStyle = isAttended ? "" : "background:rgba(255,255,255,0.1); border-color:var(--border-card);";
+      btnHtml += `<button class="btn-sm ${btnClass}" style="padding:4px; font-size:11px; margin-right:4px; ${bgStyle}" onclick="toggleOperatorAttendance('${proj.UserID}', ${i}, ${isAttended ? 0 : 1})">${i}회차 ${btnText}</button>`;
+    }
+    
+    const attendedCount = [myAtt.Session1, myAtt.Session2, myAtt.Session3, myAtt.Session4, myAtt.Session5].filter(v => v == 1).length;
+    const progress = (attendedCount / 5) * 100;
+    
+    tr.innerHTML = `
+      <td style="font-weight: 700;">${user.Name} (${proj.UserID})</td>
+      <td>${btnHtml}</td>
+      <td><span class="status-badge ${progress === 100 ? 'approved' : 'pending'}">${progress}%</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.toggleOperatorAttendance = async function(userId, sessionNum, newVal) {
+  let attendance = db.getTable("Academy_Attendance") || [];
+  let myAtt = attendance.find(a => a.UserID === userId);
+  
+  if (!myAtt) {
+    const user = db.getTable("Master_Users").find(u => u.UserID === userId);
+    myAtt = { UserID: userId, Name: user ? user.Name : "", Session1:0, Session2:0, Session3:0, Session4:0, Session5:0 };
+    attendance.push(myAtt);
+  }
+  
+  myAtt[`Session${sessionNum}`] = newVal;
+  db.saveTable("Academy_Attendance", attendance);
+  
+  // Update Project Progress locally
+  const projects = db.getTable("Project_Status");
+  const academyProj = projects.find(p => p.UserID === userId && p.ProjectType === "Academy");
+  if (academyProj) {
+    const attendedCount = [myAtt.Session1, myAtt.Session2, myAtt.Session3, myAtt.Session4, myAtt.Session5].filter(v => v == 1).length;
+    academyProj.ProgressPercent = String(attendedCount * 20);
+    db.saveTable("Project_Status", projects);
+  }
+  
+  if (db.liveMode) {
+    await db.writeToGoogleSheets({
+      action: "updateAttendance",
+      UserID: userId,
+      Name: myAtt.Name,
+      Session1: myAtt.Session1,
+      Session2: myAtt.Session2,
+      Session3: myAtt.Session3,
+      Session4: myAtt.Session4,
+      Session5: myAtt.Session5
+    });
+  }
+  
+  renderOperatorAcademyAttendance();
+  appState.currentSheet = "Academy_Attendance";
+  renderSheetsEmulator(appState.currentUser);
 };
 
 // 10. [실시간 구글 시트 에뮬레이터] 렌더링 로직
