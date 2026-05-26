@@ -830,6 +830,12 @@ function renderInternDashboard() {
     `;
     noticeBoard.appendChild(item);
   });
+
+  // 7) 아카데미 특화 커리큘럼 표시/숨김
+  const curriculumCard = document.getElementById("academy-curriculum-card");
+  if (curriculumCard) {
+    curriculumCard.style.display = (activeProj === "Academy") ? "flex" : "none";
+  }
 }
 
 // 락 오버레이에서 아카데미 탭으로 유도하는 스위칭 헬퍼
