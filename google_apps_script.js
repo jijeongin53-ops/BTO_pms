@@ -357,6 +357,15 @@ function doPost(e) {
         sheet = ss.insertSheet("Application_Status");
         sheet.appendRow(["ApplyID", "UserID", "ProjectType", "ApplyTime", "Approval"]);
       }
+      
+      // 중복 방지 (Backend 검증)
+      var values = sheet.getDataRange().getValues();
+      for (var i = 1; i < values.length; i++) {
+        if (values[i][1] === postData.UserID && values[i][2] === postData.ProjectType) {
+          return makeJsonResponse({ success: false, error: "Already applied" });
+        }
+      }
+      
       var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
       var applyId = "APP-" + Date.now();
       

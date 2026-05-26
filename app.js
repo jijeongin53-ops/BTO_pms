@@ -966,29 +966,50 @@ window.applyForCurrentProject = async function() {
   const activeProj = appState.currentProject;
   const applications = db.getTable("Application_Status") || [];
   
+  // 중복 신청 방지 검사
+  const alreadyApplied = applications.find(a => a.UserID === appState.currentUser && a.ProjectType === activeProj);
+  if (alreadyApplied) {
+    alert("이미 신청이 접수되었습니다. (중복 신청 불가)");
+    return;
+  }
+  
   const postData = {
     action: "applyProgram",
     UserID: appState.currentUser,
     ProjectType: activeProj
   };
   
-  // 로컬 스토리지에 즉시 반영
-  applications.push({
-    ApplyID: "APP-LOCAL-" + Date.now(),
-    UserID: appState.currentUser,
-    ProjectType: activeProj,
-    ApplyTime: getNowDateString(),
-    Approval: ""
-  });
-  db.saveTable("Application_Status", applications);
-  
-  // 실시간 구글 시트 쓰기 연계
-  if (db.liveMode) {
-    await db.writeToGoogleSheets(postData);
+  try {
+    const btnContainer = document.getElementById("apply-btn-container");
+    if (btnContainer) {
+      const btn = btnContainer.querySelector("button");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "신청 처리 중...";
+      }
+    }
+    
+    // 로컬 스토리지에 즉시 반영
+    applications.push({
+      ApplyID: "APP-LOCAL-" + Date.now(),
+      UserID: appState.currentUser,
+      ProjectType: activeProj,
+      ApplyTime: getNowDateString(),
+      Approval: ""
+    });
+    db.saveTable("Application_Status", applications);
+    
+    // 실시간 구글 시트 쓰기 연계
+    if (db.liveMode) {
+      await db.writeToGoogleSheets(postData);
+    }
+  } catch (err) {
+    console.error("신청 중 오류:", err);
+    alert("신청 처리 중 오류가 발생했습니다.");
+  } finally {
+    // UI 리렌더링
+    renderInternDashboard();
   }
-  
-  // UI 리렌더링
-  renderInternDashboard();
 };
 // --- [사업 신청 액션 끝] ---
 
