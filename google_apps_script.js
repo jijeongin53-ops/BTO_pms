@@ -98,6 +98,12 @@ function initializeSheets() {
     sheetAttendance.appendRow(["intern_01", "홍길동", 1, 1, 1, 1, 0]);
   }
 
+  // 9) Inquiries 탭 초기화 (관리자 문의하기)
+  var sheetInquiries = ss.getSheetByName("Inquiries") || ss.insertSheet("Inquiries");
+  if (sheetInquiries.getLastRow() === 0) {
+    sheetInquiries.appendRow(["InquiryID", "UserID", "Role", "Title", "Content", "Date", "Status"]);
+  }
+
   // 7) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
   var defaultSheet1 = ss.getSheetByName("시트1");
   var defaultSheet2 = ss.getSheetByName("Sheet1");
@@ -119,8 +125,8 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 8개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices", "Academy_Attendance"];
+    // 9개 탭에서 데이터를 읽어와 JSON으로 반환
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices", "Academy_Attendance", "Inquiries"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -403,6 +409,28 @@ function doPost(e) {
       sheet.getRange(2, 5).setValue(nowStr);
       
       return makeJsonResponse({ success: true, message: "Budget updated successfully" });
+      
+    } else if (action === "submitInquiry") {
+      // 관리자 문의하기 제출
+      var sheet = ss.getSheetByName("Inquiries");
+      if (!sheet) {
+        sheet = ss.insertSheet("Inquiries");
+        sheet.appendRow(["InquiryID", "UserID", "Role", "Title", "Content", "Date", "Status"]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      var inquiryId = "INQ-" + Date.now();
+      
+      sheet.appendRow([
+        inquiryId,
+        postData.UserID,
+        postData.Role,
+        postData.Title,
+        postData.Content,
+        nowStr,
+        "Pending"
+      ]);
+      
+      return makeJsonResponse({ success: true, message: "Inquiry submitted successfully" });
     }
     
     return makeJsonResponse({ success: false, error: "Unknown action: " + action });

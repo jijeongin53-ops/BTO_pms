@@ -850,12 +850,16 @@ function renderInternDashboard() {
     filteredNotices.forEach(notice => {
       const item = document.createElement("div");
       item.className = "notice-item";
+      item.style.cursor = "pointer";
+      item.style.transition = "background-color 0.2s ease";
+      item.onmouseover = () => item.style.backgroundColor = "rgba(0, 255, 170, 0.05)";
+      item.onmouseout = () => item.style.backgroundColor = "transparent";
+      item.onclick = () => openNoticeModal(notice);
       item.innerHTML = `
         <div class="notice-title">
           <span>${notice.Title}</span>
           <span class="notice-date">${notice.Date.split(' ')[0]}</span>
         </div>
-        <div class="notice-content">${notice.Content}</div>
       `;
       noticeBoard.appendChild(item);
     });
