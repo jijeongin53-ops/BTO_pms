@@ -31,7 +31,7 @@ const DEFAULT_DOCUMENTS = [
 const DEFAULT_NOTICES = [];
 
 const DEFAULT_ADMIN_DASHBOARD = [
-  { TotalBudget: 250000000, ExecutedBudget: 152000000, RemainingBudget: 98000000, InternGoal: 30, LastUpdated: "2026-05-20 12:00:00" }
+  { TotalBudget: 0, ExecutedBudget: 0, RemainingBudget: 0, InternGoal: 30, LastUpdated: "2026-05-20 12:00:00" }
 ];
 
 // 아카데미 5회차 출석 상세 로그
@@ -396,6 +396,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Live 연동 시 Google Sheets 에 전송
     if (db.liveMode && db.appsScriptUrl) {
       db.writeToGoogleSheets(postData);
+    }
+    
+    // 인턴 가입 시 기본 프로젝트 현황 및 아카데미 출석부 자동 생성
+    if (role === "Intern") {
+      const projects = db.getTable("Project_Status") || [];
+      const nowStr = getNowDateString();
+      projects.push({ ProjectType: "Internship", UserID: userId, Stage: "서류심사", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
+      projects.push({ ProjectType: "Academy", UserID: userId, Stage: "수강대기", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
+      projects.push({ ProjectType: "Mice", UserID: userId, Stage: "모집공고", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
+      db.saveTable("Project_Status", projects);
+
+      const attendance = db.getTable("Academy_Attendance") || [];
+      attendance.push({ UserID: userId, Name: postData.Name, Session1: 0, Session2: 0, Session3: 0, Session4: 0, Session5: 0 });
+      db.saveTable("Academy_Attendance", attendance);
     }
     
     alert("회원가입이 완료되었습니다!");

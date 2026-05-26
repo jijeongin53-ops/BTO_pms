@@ -82,7 +82,7 @@ function initializeSheets() {
   sheetAdmin.clear();
   sheetAdmin.appendRow(["TotalBudget", "ExecutedBudget", "RemainingBudget", "InternGoal", "LastUpdated"]);
   var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
-  sheetAdmin.appendRow([250000000, 152000000, 98000000, 30, nowStr]);
+  sheetAdmin.appendRow([0, 0, 0, 30, nowStr]);
 
   // 7) Notices 탭 초기화 (공지사항 관리용)
   var sheetNotices = ss.getSheetByName("Notices") || ss.insertSheet("Notices");
@@ -344,6 +344,21 @@ function doPost(e) {
         postData.Password || "",
         "Active"
       ]);
+      
+      // 인턴 가입 시 기본 프로젝트 현황 및 아카데미 출석부 자동 생성
+      if (postData.Role === "Intern") {
+        var projSheet = ss.getSheetByName("Project_Status");
+        if (projSheet) {
+          projSheet.appendRow(["Internship", postData.UserID, "서류심사", "신청 대기", "0", "N/A", nowStr]);
+          projSheet.appendRow(["Academy", postData.UserID, "수강대기", "신청 대기", "0", "N/A", nowStr]);
+          projSheet.appendRow(["Mice", postData.UserID, "모집공고", "신청 대기", "0", "N/A", nowStr]);
+        }
+        
+        var attSheet = ss.getSheetByName("Academy_Attendance");
+        if (attSheet) {
+          attSheet.appendRow([postData.UserID, displayName, 0, 0, 0, 0, 0]);
+        }
+      }
       
       return makeJsonResponse({ success: true, message: "User registered successfully" });
       
