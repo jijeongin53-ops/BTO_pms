@@ -314,7 +314,12 @@ function doPost(e) {
         postData.CompanyName || "",
         postData.ContactPerson || "",
         postData.Password || "",
-        nowStr
+        nowStr,
+        postData.School || "",
+        postData.EnrollmentStatus || "",
+        postData.Major || "",
+        postData.Grade || "",
+        postData.Residence || ""
       ]);
       
       // 즉시 로그인을 위해 Master_Users 에도 등록
@@ -330,7 +335,12 @@ function doPost(e) {
         postData.Role,
         postData.Email || "",
         postData.Password || "",
-        "Active"
+        "Active",
+        postData.School || "",
+        postData.EnrollmentStatus || "",
+        postData.Major || "",
+        postData.Grade || "",
+        postData.Residence || ""
       ]);
       
       // 인턴 가입 시 기본 프로젝트 현황 및 아카데미 출석부 자동 생성

@@ -369,6 +369,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       postData.Phone = document.getElementById("signup-intern-phone").value;
       postData.Birthdate = document.getElementById("signup-intern-birth").value;
       postData.Email = document.getElementById("signup-intern-email").value;
+      postData.School = document.getElementById("signup-intern-school")?.value || "";
+      postData.EnrollmentStatus = document.getElementById("signup-intern-enrollment")?.value || "";
+      postData.Major = document.getElementById("signup-intern-major")?.value || "";
+      postData.Grade = document.getElementById("signup-intern-grade")?.value || "";
+      postData.Residence = document.getElementById("signup-intern-residence")?.value || "";
     } else if (role === "Company") {
       postData.CompanyName = document.getElementById("signup-comp-name").value;
       postData.ContactPerson = document.getElementById("signup-comp-manager").value;
