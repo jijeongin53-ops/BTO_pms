@@ -17,8 +17,16 @@ function initializeSheets() {
   
   // 1) Master_Users 탭 초기화
   var sheetUsers = ss.getSheetByName("Master_Users") || ss.insertSheet("Master_Users");
-  sheetUsers.clear();
-  sheetUsers.appendRow(["UserID", "Name", "Role", "Email", "Password", "ActiveState"]);
+  if (sheetUsers.getLastRow() === 0) {
+    sheetUsers.appendRow(["UserID", "Name", "Role", "Email", "Password", "ActiveState", "School", "EnrollmentStatus", "Major", "Grade", "Residence"]);
+  } else {
+    // 기존 데이터가 있을 때: School 헤더가 없으면 5개 헤더 추가
+    var headers = sheetUsers.getRange(1, 1, 1, sheetUsers.getLastColumn()).getValues()[0];
+    if (headers.indexOf("School") === -1) {
+      var newCol = sheetUsers.getLastColumn() + 1;
+      sheetUsers.getRange(1, newCol, 1, 5).setValues([["School", "EnrollmentStatus", "Major", "Grade", "Residence"]]);
+    }
+  }
   
   // 2) Project_Status 탭 초기화
   var sheetProjects = ss.getSheetByName("Project_Status") || ss.insertSheet("Project_Status");
@@ -33,7 +41,14 @@ function initializeSheets() {
   // 4) Registered_Users 탭 초기화 (신규 가입자 저장용)
   var sheetReg = ss.getSheetByName("Registered_Users") || ss.insertSheet("Registered_Users");
   if (sheetReg.getLastRow() === 0) {
-    sheetReg.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "Password", "RegisteredTime"]);
+    sheetReg.appendRow(["UserID", "Role", "Name", "Phone", "Birthdate", "Email", "CompanyName", "ContactPerson", "Password", "RegisteredTime", "School", "EnrollmentStatus", "Major", "Grade", "Residence"]);
+  } else {
+    // 기존 데이터가 있을 때: School 헤더가 없으면 5개 헤더 추가
+    var headersReg = sheetReg.getRange(1, 1, 1, sheetReg.getLastColumn()).getValues()[0];
+    if (headersReg.indexOf("School") === -1) {
+      var newColReg = sheetReg.getLastColumn() + 1;
+      sheetReg.getRange(1, newColReg, 1, 5).setValues([["School", "EnrollmentStatus", "Major", "Grade", "Residence"]]);
+    }
   }
 
   // 5) Application_Status 탭 초기화 (사업 신청 현황 + 승인 필드)
