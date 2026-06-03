@@ -1368,6 +1368,9 @@ function renderOperatorDashboard() {
   // 전체 서류 목록 테이블 렌더링
   renderOperatorDocsTable();
   
+  // 전체 사업 신청 내역 관리 테이블 렌더링
+  renderOperatorApplicationsTable();
+  
   // 아카데미 출석 관리 테이블 렌더링
   renderOperatorAcademyAttendance();
 }
@@ -1478,6 +1481,100 @@ window.approveDocument = async function(docID, newStatus) {
     // 시트 모니터 포커싱 및 갱신 효과
     appState.currentSheet = "Documents_Log";
     renderSheetsEmulator(docID);
+  }
+};
+
+function renderOperatorApplicationsTable() {
+  const tbody = document.querySelector("#operator-applications-table tbody");
+  if (!tbody) return;
+  
+  const applications = db.getTable("Application_Status") || [];
+  const users = db.getTable("Master_Users") || [];
+  
+  tbody.innerHTML = "";
+  
+  if (applications.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">신청 내역이 없습니다.</td></tr>`;
+    return;
+  }
+  
+  // 최신 신청이 위로 오도록 역순 정렬
+  const sortedApps = [...applications].reverse();
+  
+  sortedApps.forEach(app => {
+    const user = users.find(u => u.UserID === app.UserID) || { Name: "알수없음" };
+    const el = document.createElement("tr");
+    
+    let statusClass = "pending";
+    let statusTxt = "대기";
+    if (app.Approval === "Y") {
+      statusClass = "approved";
+      statusTxt = "승인 완료";
+    } else if (app.Approval === "N") {
+      statusClass = "rejected";
+      statusTxt = "반려됨";
+    }
+    
+    let projName = "인턴십";
+    if (app.ProjectType === "Academy") projName = "아카데미";
+    if (app.ProjectType === "Mice") projName = "MICE 공모전";
+
+    el.innerHTML = `
+      <td>${projName}</td>
+      <td><strong>${user.Name}</strong><br><small style="color:var(--text-muted)">(${app.UserID || "알수없음"})</small></td>
+      <td>${app.ApplyTime}</td>
+      <td><span class="status-badge ${statusClass}">${statusTxt}</span></td>
+      <td>
+        <div style="display:flex; gap:5px;">
+          <button class="btn-sm btn-outline-sm" onclick="window.updateApplicationApproval('${app.ApplyID}', 'Y')" ${app.Approval === 'Y' ? 'disabled' : ''}>승인</button>
+          <button class="btn-sm btn-outline-sm" onclick="window.updateApplicationApproval('${app.ApplyID}', 'N')" ${app.Approval === 'N' ? 'disabled' : ''}>거절</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(el);
+  });
+}
+
+window.updateApplicationApproval = async function(applyId, newStatus) {
+  const applications = db.getTable("Application_Status") || [];
+  const targetApp = applications.find(a => a.ApplyID === applyId);
+  
+  if (targetApp) {
+    targetApp.Approval = newStatus;
+    db.saveTable("Application_Status", applications);
+    
+    // 승인 시 Project_Status 로컬 연계 (프론트엔드 임시 시뮬레이션)
+    if (newStatus === "Y") {
+      const projects = db.getTable("Project_Status") || [];
+      const proj = projects.find(p => p.ProjectType === targetApp.ProjectType && p.UserID === targetApp.UserID);
+      if (proj) {
+        if (targetApp.ProjectType === "Internship") {
+          proj.Stage = "면접전형";
+          proj.MatchingStatus = "심사통과";
+          proj.ProgressPercent = "50";
+        } else if (targetApp.ProjectType === "Mice") {
+          proj.Stage = "서류합격";
+          proj.MatchingStatus = "진행중";
+          proj.ProgressPercent = "50";
+        }
+        db.saveTable("Project_Status", projects);
+      }
+    }
+    
+    // 실시간 구글 시트 쓰기 연계
+    if (db.liveMode) {
+      await db.writeToGoogleSheets({
+        action: "updateApplicationApproval",
+        ApplyID: applyId,
+        Approval: newStatus
+      });
+    }
+
+    // 리렌더
+    renderOperatorApplicationsTable();
+    
+    appState.currentSheet = "Application_Status";
+    renderSheetsEmulator(applyId);
   }
 };
 

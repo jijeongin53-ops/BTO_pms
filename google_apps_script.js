@@ -404,6 +404,54 @@ function doPost(e) {
       
       return makeJsonResponse({ success: true, message: "Application submitted successfully" });
       
+    } else if (action === "updateApplicationApproval") {
+      // 관리자 - 사업 신청 승인 상태 업데이트
+      var sheet = ss.getSheetByName("Application_Status");
+      if (!sheet) return makeJsonResponse({ success: false, error: "Sheet not found" });
+      
+      var applyId = postData.ApplyID;
+      var newStatus = postData.Approval;
+      
+      var data = sheet.getDataRange().getValues();
+      var found = false;
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][0] === applyId) {
+          sheet.getRange(i + 1, 5).setValue(newStatus);
+          
+          // 승인 시 Project_Status 업데이트
+          var projType = data[i][2];
+          var userId = data[i][1];
+          if (newStatus === "Y") {
+            var projSheet = ss.getSheetByName("Project_Status");
+            if (projSheet) {
+              var pData = projSheet.getDataRange().getValues();
+              for (var j = 1; j < pData.length; j++) {
+                if (pData[j][0] === projType && pData[j][1] === userId) {
+                  if (projType === "Internship") {
+                    projSheet.getRange(j + 1, 3).setValue("면접전형");
+                    projSheet.getRange(j + 1, 4).setValue("심사통과");
+                    projSheet.getRange(j + 1, 5).setValue("50");
+                  } else if (projType === "Mice") {
+                    projSheet.getRange(j + 1, 3).setValue("서류합격");
+                    projSheet.getRange(j + 1, 4).setValue("진행중");
+                    projSheet.getRange(j + 1, 5).setValue("50");
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          found = true;
+          break;
+        }
+      }
+      
+      if (found) {
+        return makeJsonResponse({ success: true, message: "Application approval updated successfully" });
+      } else {
+        return makeJsonResponse({ success: false, error: "Application not found" });
+      }
+      
     } else if (action === "updateBudget") {
       // 관리자 예산 업데이트
       var sheet = ss.getSheetByName("Admin_Dashboard");
