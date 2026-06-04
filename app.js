@@ -266,14 +266,7 @@ const appState = {
   async login(userId, role) {
     this.currentUser = userId;
     this.currentRole = role;
-    document.getElementById("auth-view").classList.remove("active");
-    document.getElementById("app-main-content").style.display = "block";
-    
-    // 자동 실시간 데이터 동기화
-    if (db.liveMode && db.appsScriptUrl) {
-      await db.fetchFromGoogleSheets();
-    }
-    
+
     // 접속자 정보 표시 업데이트
     const users = db.getTable("Master_Users") || [];
     const user = users.find(u => u.UserID === userId);
@@ -293,8 +286,19 @@ const appState = {
     } else if (role === "Operator") {
       document.getElementById("operator-user-name").innerText = displayName;
     }
-    
+
+    // 뷰를 먼저 전환하여 깜빡임 방지 (로컬 데이터 렌더링)
     this.updateUI();
+
+    document.getElementById("auth-view").classList.remove("active");
+    document.getElementById("app-main-content").style.display = "block";
+    
+    // 자동 실시간 데이터 동기화
+    if (db.liveMode && db.appsScriptUrl) {
+      await db.fetchFromGoogleSheets();
+      // 최신 데이터로 뷰 갱신
+      this.updateUI();
+    }
   },
 
   updateUI() {
