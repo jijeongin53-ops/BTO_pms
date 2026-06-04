@@ -308,6 +308,31 @@
                 </div>
               </div>
             </div>
+            
+            <!-- 인턴 참여 희망 기업 선택 -->
+            <div class="dashboard-card span-full glass-card">
+              <div class="card-header">
+                <h3>참여 기업 리스트 (희망 기업 지원)</h3>
+                <span class="status-badge" id="intern-apply-count-badge">지원 현황: 0 / 3</span>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="pms-table">
+                    <thead>
+                      <tr>
+                        <th>기업명</th>
+                        <th>담당자</th>
+                        <th>이메일</th>
+                        <th style="text-align: right;">지원하기</th>
+                      </tr>
+                    </thead>
+                    <tbody id="intern-company-list">
+                      <!-- JS 동적 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
 
             <!-- 좌측: 실시간 참여/매칭 상세 현황 -->
             <div class="dashboard-card glass-card">

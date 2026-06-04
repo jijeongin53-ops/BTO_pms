@@ -488,6 +488,34 @@ function doPost(e) {
       }
       return makeJsonResponse({ success: true, message: "Pipeline updated" });
 
+    } else if (action === "applyToCompany") {
+      var sheet = ss.getSheetByName("Project_Status");
+      if (!sheet) {
+        sheet = ss.insertSheet("Project_Status");
+        sheet.appendRow(["ProjectType", "UserID", "Stage", "MatchingStatus", "ProgressPercent", "RegistrationNo", "UpdateTime", "CompanyID", "PipelineStage"]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      
+      // Ensure CompanyID column exists
+      var headers = sheet.getDataRange().getValues()[0];
+      if (headers.indexOf("CompanyID") === -1) {
+        sheet.getRange(1, headers.length + 1).setValue("CompanyID");
+        sheet.getRange(1, headers.length + 2).setValue("PipelineStage");
+      }
+      
+      sheet.appendRow([
+        postData.ProjectType,
+        postData.UserID,
+        "지원완료",
+        "지원 접수",
+        "0",
+        "N/A",
+        nowStr,
+        postData.CompanyID,
+        0
+      ]);
+      return makeJsonResponse({ success: true, message: "Applied to company successfully" });
+
     } else if (action === "applyProgram") {
       // 신규 사업 신청 기록
       var sheet = ss.getSheetByName("Application_Status");

@@ -744,23 +744,57 @@ function renderInternDashboard() {
   specsContainer.innerHTML = "";
 
   if (activeProj === "Internship") {
-    indicatorTitle.innerText = "서류 평가 지수";
-    indicatorDesc.innerText = "이력서 평점 우수(포트폴리오 우수자 가산 적용)";
-    
     specsContainer.innerHTML = `
       <div class="widget-row">
-        <span class="widget-label">매칭 희망 기업</span>
-        <span class="widget-val">밍글무드 (관광 MICE 기획 직무)</span>
-      </div>
-      <div class="widget-row">
         <span class="widget-label">지정 이력서 파일</span>
-        <span class="widget-val">[이력서]홍길동_관광MICE_2026.pdf</span>
+        <span class="widget-val">[이력서]${displayName}_관광MICE_2026.pdf</span>
       </div>
       <div class="widget-row">
         <span class="widget-label">출석부 인증 상태</span>
         <span class="widget-val" style="color: var(--status-warning)">제출 대기 (배정 후 활성화)</span>
       </div>
     `;
+
+    // 기업 리스트 렌더링
+    const companyListEl = document.getElementById("intern-company-list");
+    if (companyListEl) {
+      companyListEl.innerHTML = "";
+      const companies = users.filter(u => u.Role === "Company");
+      
+      // 현재 사용자가 지원한 기업 내역 파악
+      const myApplications = projStatusList.filter(p => p.UserID === appState.currentUser && p.ProjectType === "Internship" && p.CompanyID);
+      
+      // 지원 현황 뱃지 업데이트
+      const applyCountBadge = document.getElementById("intern-apply-count-badge");
+      if (applyCountBadge) {
+        applyCountBadge.innerText = `지원 현황: ${myApplications.length} / 3`;
+      }
+
+      companies.forEach(comp => {
+        const hasAppliedToThis = myApplications.find(p => p.CompanyID === comp.UserID);
+        const canApply = myApplications.length < 3;
+        
+        let applyBtnHtml = "";
+        if (hasAppliedToThis) {
+          applyBtnHtml = `<span style="color: var(--status-success); font-weight: 700; font-size: 12px;">지원완료 ✅</span>`;
+        } else {
+          if (canApply) {
+            applyBtnHtml = `<button class="btn-sm btn-primary-sm" onclick="applyToCompany('${comp.UserID}')">[희망]</button>`;
+          } else {
+            applyBtnHtml = `<span style="color: var(--text-muted); font-size: 12px;">지원 마감</span>`;
+          }
+        }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${comp.Name}</td>
+          <td>${comp.ManagerName || '담당자'}</td>
+          <td>${comp.Email}</td>
+          <td style="text-align: right;">${applyBtnHtml}</td>
+        `;
+        companyListEl.appendChild(tr);
+      });
+    }
   } else if (activeProj === "Academy") {
     // 아카데미 출석 수 및 참여율 계산
     const allAttendance = db.getTable("Academy_Attendance") || [];
@@ -1151,7 +1185,7 @@ function renderCompanyCandidates() {
   container.innerHTML = "";
 
   // Project_Status 중 인턴십 트랙에 해당하는 인턴들 수집
-  const projects = db.getTable("Project_Status").filter(p => p.ProjectType === "Internship");
+  const projects = db.getTable("Project_Status").filter(p => p.ProjectType === "Internship" && p.CompanyID === appState.currentUser);
   const users = db.getTable("Master_Users");
   
   // 기업에 매칭 가능한 목록을 Project_Status에서 동적으로 생성
@@ -1189,18 +1223,14 @@ function renderCompanyCandidates() {
       </div>
       
       <!-- 6단계 현황 트래커 -->
-      <div class="company-pipeline-container" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-        <div class="pipeline-header" style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px;">진행 현황 관리 (클릭하여 상태 변경)</div>
+      <div class="company-pipeline-container" style="background: rgba(0,0,0,0.2); padding: 20px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px;">
+        <div class="pipeline-header" style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 16px;">진행 현황 (관리자 확인 완료 상태)</div>
         <div class="pipeline-steps" style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
           <!-- 진행선 -->
-          <div style="position: absolute; top: 12px; left: 10px; right: 10px; height: 2px; background: rgba(255,255,255,0.1); z-index: 1;"></div>
+          <div style="position: absolute; top: 16px; left: 10px; right: 10px; height: 3px; background: rgba(255,255,255,0.1); z-index: 1;"></div>
           
-          ${renderPipelineStepUI(cand.id, cand.status ? cand.status.PipelineStage : 0)}
+          ${renderPipelineStepUI(cand.id, cand.status ? cand.status.PipelineStage : 0, true)}
         </div>
-      </div>
-
-      <div class="intern-actions" style="border-top: 1px solid var(--border-card); padding-top: 12px; display: flex; gap: 8px; justify-content: flex-end;">
-        <button class="btn-sm" onclick="viewResumeModal('${cand.id}')">이력서 열람</button>
       </div>
     `;
     container.appendChild(el);
@@ -1212,7 +1242,7 @@ function renderCompanyCandidates() {
 }
 
 // 6단계 파이프라인 렌더링 헬퍼 함수
-function renderPipelineStepUI(internId, currentStep) {
+function renderPipelineStepUI(internId, currentStep, isReadOnly = false) {
   const steps = [
     { label: "신청" },
     { label: "청년 현황" },
@@ -1230,15 +1260,17 @@ function renderPipelineStepUI(internId, currentStep) {
     let color = isCompleted ? "var(--color-primary)" : "var(--text-muted)";
     let bg = isCompleted ? "var(--color-primary)" : "var(--bg-app)";
     let border = isCompleted ? "var(--color-primary)" : "var(--border-card)";
-    let textStyle = isActive ? "color: var(--color-primary); font-weight: 700;" : (isCompleted ? "color: var(--text-main);" : "color: var(--text-muted);");
-    let glow = isActive ? "box-shadow: 0 0 10px var(--color-primary-glow);" : "";
+    let textStyle = isActive ? "color: var(--color-primary); font-weight: 800; font-size: 12px;" : (isCompleted ? "color: var(--text-main); font-size: 11px;" : "color: var(--text-muted); font-size: 11px;");
+    let glow = isActive ? "box-shadow: 0 0 15px var(--color-primary-glow);" : "";
+    let onClickStr = isReadOnly ? "" : `onclick="updatePipelineStatus('${internId}', ${index})"`;
+    let cursorStyle = isReadOnly ? "cursor: default;" : "cursor: pointer;";
 
     html += `
-      <div class="pipe-step" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex: 1;" onclick="updatePipelineStatus('${internId}', ${index})">
-        <div class="pipe-dot" style="width: 24px; height: 24px; border-radius: 50%; background: ${bg}; border: 2px solid ${border}; display: flex; align-items: center; justify-content: center; transition: all 0.2s; ${glow}">
-          ${isCompleted ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+      <div class="pipe-step" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; ${cursorStyle}" ${onClickStr}>
+        <div class="pipe-dot" style="width: 32px; height: 32px; border-radius: 50%; background: ${bg}; border: 3px solid ${border}; display: flex; align-items: center; justify-content: center; transition: all 0.2s; ${glow}">
+          ${isCompleted ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
         </div>
-        <div style="font-size: 10px; text-align: center; line-height: 1.2; ${textStyle}">${step.label}</div>
+        <div style="text-align: center; line-height: 1.3; ${textStyle}">${step.label}</div>
       </div>
     `;
   });
@@ -1981,6 +2013,53 @@ window.submitInquiry = async function() {
     btn.disabled = false;
     btn.innerText = "보내기";
   }
+};
+
+// --- [기업 희망 지원 액션] ---
+window.applyToCompany = async function(companyId) {
+  const applications = db.getTable("Project_Status") || [];
+  const myApplications = applications.filter(a => a.UserID === appState.currentUser && a.ProjectType === "Internship" && a.CompanyID);
+  
+  if (myApplications.length >= 3) {
+    alert("최대 3개의 기업까지만 지원 가능합니다.");
+    return;
+  }
+  
+  const alreadyApplied = myApplications.find(a => a.CompanyID === companyId);
+  if (alreadyApplied) {
+    alert("이미 지원한 기업입니다.");
+    return;
+  }
+  
+  const postData = {
+    action: "applyToCompany",
+    UserID: appState.currentUser,
+    ProjectType: "Internship",
+    CompanyID: companyId
+  };
+  
+  // Optimistic UI Update
+  const newApp = {
+    ProjectType: "Internship",
+    UserID: appState.currentUser,
+    CompanyID: companyId,
+    Stage: "지원완료",
+    MatchingStatus: "지원 접수",
+    PipelineStage: 0,
+    ProgressPercent: "0",
+    RegistrationNo: "N/A",
+    UpdateTime: getNowDateString()
+  };
+  applications.push(newApp);
+  db.saveTable("Project_Status", applications);
+  
+  appState.updateUI();
+  
+  if (db.liveMode) {
+    await db.writeToGoogleSheets(postData);
+  }
+  
+  alert("해당 기업에 성공적으로 지원했습니다!");
 };
 
 window.openNoticeModal = function(arg1, content, date) {
