@@ -863,7 +863,8 @@ function renderInternDashboard() {
     });
     sessionsHTML += `</div>`;
 
-    specsContainer.innerHTML = `
+    if (specsContainer) {
+      specsContainer.innerHTML = `
       <div class="widget-row">
         <span class="widget-label">아카데미 코스</span>
         <span class="widget-val">관광 MICE 실무 및 로컬 콘텐츠 기획 과정 (총 5회)</span>
