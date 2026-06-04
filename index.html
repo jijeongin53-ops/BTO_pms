@@ -316,6 +316,9 @@
                 <span class="status-badge" id="intern-apply-count-badge">지원 현황: 0 / 3</span>
               </div>
               <div class="card-body">
+                <p class="info-msg" style="color: var(--color-warning); font-size: 13px; margin-bottom: 15px; background: rgba(255, 170, 0, 0.1); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 170, 0, 0.3);">
+                  ⚠️ 희망 기업 지원은 <strong>2026년 6월 24일</strong>부터 가능합니다. (2026.06.23까지 지원 비활성화)
+                </p>
                 <div class="table-responsive">
                   <table class="pms-table">
                     <thead>
@@ -330,6 +333,26 @@
                       <!-- JS 동적 렌더링 -->
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 참여 신청서 다운로드 및 업로드 (인턴 전용) -->
+            <div class="dashboard-card span-full glass-card" id="intern-application-form-card">
+              <div class="card-header">
+                <h3>참여 신청서 다운로드 및 제출</h3>
+              </div>
+              <div class="card-body">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+                  인턴십 지원을 위해 아래 양식을 다운로드하여 작성한 후, 지정된 업로드 폴더에 제출해 주세요.
+                </p>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                  <a href="https://drive.google.com/file/d/1xJhuBSXTf-0q8x6BV3zccFilDGkbIpeO/view?usp=drive_link" target="_blank" class="btn btn-outline" style="flex: 1; justify-content: center; padding: 12px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; border: 1px solid var(--color-primary); color: var(--color-primary);">
+                    <span style="margin-right: 8px; font-size: 18px;">📥</span> 참여 신청서 양식 다운로드
+                  </a>
+                  <a href="https://drive.google.com/drive/u/0/folders/1GJ6IpmD2MVyG0aAWBTFK_xVkoEVSzzcu" target="_blank" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; background-color: var(--color-primary); color: #000; font-weight: 600;">
+                    <span style="margin-right: 8px; font-size: 18px;">📤</span> 작성한 신청서 업로드 제출
+                  </a>
                 </div>
               </div>
             </div>

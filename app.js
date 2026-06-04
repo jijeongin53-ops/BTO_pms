@@ -746,15 +746,15 @@ function renderInternDashboard() {
   // SVG stroke-dasharray 계산
   progressCircle.setAttribute("stroke-dasharray", `${pct}, 100`);
 
-  const indicatorTitle = document.getElementById("intern-indicator-title");
-  const indicatorDesc = document.getElementById("intern-indicator-desc");
   const specsContainer = document.getElementById("intern-project-specs");
   const companyListCard = document.getElementById("intern-company-list-card");
+  const applicationFormCard = document.getElementById("intern-application-form-card");
   
   specsContainer.innerHTML = "";
 
   if (activeProj === "Internship") {
     if (companyListCard) companyListCard.style.display = "block";
+    if (applicationFormCard) applicationFormCard.style.display = "block";
     specsContainer.innerHTML = `
       <div class="widget-row">
         <span class="widget-label">지정 이력서 파일</span>
@@ -781,6 +781,11 @@ function renderInternDashboard() {
         applyCountBadge.innerText = `지원 현황: ${myApplications.length} / 3`;
       }
 
+      // 날짜 체크 (2026.06.24 이전 비활성화)
+      const today = new Date();
+      const applyStartDate = new Date("2026-06-24T00:00:00+09:00");
+      const isApplyEnabled = today >= applyStartDate;
+
       companies.forEach(comp => {
         const hasAppliedToThis = myApplications.find(p => p.CompanyID === comp.UserID);
         const canApply = myApplications.length < 3;
@@ -789,7 +794,9 @@ function renderInternDashboard() {
         if (hasAppliedToThis) {
           applyBtnHtml = `<span style="color: var(--status-success); font-weight: 700; font-size: 12px;">지원완료 ✅</span>`;
         } else {
-          if (canApply) {
+          if (!isApplyEnabled) {
+            applyBtnHtml = `<button class="btn-sm" style="background-color: var(--color-secondary); color: var(--text-muted); cursor: not-allowed; border: none; padding: 4px 8px; border-radius: 4px;" disabled>[오픈 대기]</button>`;
+          } else if (canApply) {
             applyBtnHtml = `<button class="btn-sm btn-primary-sm" onclick="applyToCompany('${comp.UserID}')">[희망]</button>`;
           } else {
             applyBtnHtml = `<span style="color: var(--text-muted); font-size: 12px;">지원 마감</span>`;
@@ -869,6 +876,7 @@ function renderInternDashboard() {
       ` : ''}
     `;
     if (companyListCard) companyListCard.style.display = "none";
+    if (applicationFormCard) applicationFormCard.style.display = "none";
   } else { // Mice
     indicatorTitle.innerText = "공모전 서류 접수 통과";
     indicatorDesc.innerText = "기획서 파일 무결성 및 인원 구성 검증 완료";
@@ -888,6 +896,7 @@ function renderInternDashboard() {
       </div>
     `;
     if (companyListCard) companyListCard.style.display = "none";
+    if (applicationFormCard) applicationFormCard.style.display = "none";
   }
 
   // 6) 공지사항 로딩 (현재 프로젝트 타입 및 전체 공지만 필터링)
