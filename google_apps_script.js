@@ -89,7 +89,13 @@ function initializeSheets() {
     sheetInquiries.appendRow(["InquiryID", "UserID", "Role", "Title", "Content", "Date", "Status"]);
   }
 
-  // 7) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
+  // 10) Document_Templates 탭 초기화 (제출 서류 양식 다운로드용)
+  var sheetTemplates = ss.getSheetByName("Document_Templates") || ss.insertSheet("Document_Templates");
+  if (sheetTemplates.getLastRow() === 0) {
+    sheetTemplates.appendRow(["TemplateID", "DocType", "FileName", "DriveURL"]);
+  }
+
+  // 11) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
   var defaultSheet1 = ss.getSheetByName("시트1");
   var defaultSheet2 = ss.getSheetByName("Sheet1");
   if (defaultSheet1 && ss.getSheets().length > 1) ss.deleteSheet(defaultSheet1);
@@ -98,20 +104,53 @@ function initializeSheets() {
   Logger.log("Antigravity PMS Sheets initialized successfully!");
 }
 
-// 2. CORS 헤더 지원을 위한 응답 래퍼 함수
+// 2. 이메일 발송 관련 헬퍼 함수
+function getUserEmail(userId) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var masterSheet = ss.getSheetByName("Master_Users");
+  if (!masterSheet) return null;
+  var data = masterSheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === userId) {
+      return data[i][3]; // Email is column 4 (index 3)
+    }
+  }
+  return null;
+}
+
+function sendNotificationEmail(email, status) {
+  if (!email) return;
+  var subject = "[부산관광공사] 인재양성 일자리 사업 신청 결과 안내";
+  var resultText = "결과";
+  if (status === "Y" || status === "Approved") {
+    resultText = "합격";
+  } else if (status === "N" || status === "Rejected") {
+    resultText = "불합격";
+  }
+  
+  var body = "안녕하세요. 2026 인재양성 일자리 사업에 신청해 주셔서 감사합니다.\n신청 결과 [" + resultText + "] 하셨습니다.";
+  
+  try {
+    MailApp.sendEmail(email, subject, body);
+  } catch(e) {
+    // Ignore error
+  }
+}
+
+// 3. CORS 헤더 지원을 위한 응답 래퍼 함수
 function makeJsonResponse(data) {
   var output = ContentService.createTextOutput(JSON.stringify(data));
   output.setMimeType(ContentService.MimeType.JSON);
   return output;
 }
 
-// 3. API - GET 요청 처리 (데이터 일괄 조회)
+// 4. API - GET 요청 처리 (데이터 일괄 조회)
 function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 9개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices", "Academy_Attendance", "Inquiries"];
+    // 10개 탭에서 데이터를 읽어와 JSON으로 반환
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices", "Academy_Attendance", "Inquiries", "Document_Templates"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -148,7 +187,7 @@ function doGet(e) {
   }
 }
 
-// 4. API - POST 요청 처리 (데이터 수정 및 추가)
+// 5. API - POST 요청 처리 (데이터 수정 및 추가)
 function doPost(e) {
   try {
     var postData;
@@ -287,6 +326,14 @@ function doPost(e) {
       
       if (foundRow !== -1) {
         sheet.getRange(foundRow, 8).setValue(postData.Status); // Status 필드 업데이트
+        
+        // 이메일 발송 연동
+        var targetUserId = values[foundRow - 1][1];
+        var email = getUserEmail(targetUserId);
+        if (email) {
+          sendNotificationEmail(email, postData.Status);
+        }
+        
         return makeJsonResponse({ success: true, message: "Document status updated" });
       } else {
         return makeJsonResponse({ success: false, error: "Document ID not found: " + postData.DocID });
@@ -414,6 +461,7 @@ function doPost(e) {
       
       var data = sheet.getDataRange().getValues();
       var found = false;
+      var targetUserId = null;
       for (var i = 1; i < data.length; i++) {
         if (data[i][0] === applyId) {
           sheet.getRange(i + 1, 5).setValue(newStatus);
@@ -421,6 +469,7 @@ function doPost(e) {
           // 승인 시 Project_Status 업데이트
           var projType = data[i][2];
           var userId = data[i][1];
+          targetUserId = userId;
           if (newStatus === "Y") {
             var projSheet = ss.getSheetByName("Project_Status");
             if (projSheet) {
@@ -447,6 +496,11 @@ function doPost(e) {
       }
       
       if (found) {
+        // 이메일 발송 연동
+        var email = getUserEmail(targetUserId);
+        if (email) {
+          sendNotificationEmail(email, newStatus);
+        }
         return makeJsonResponse({ success: true, message: "Application approval updated successfully" });
       } else {
         return makeJsonResponse({ success: false, error: "Application not found" });

@@ -406,6 +406,18 @@
             </div>
             <div class="card-body">
               <div class="file-upload-section">
+                <!-- 제출 서류 양식 다운로드 영역 -->
+                <div class="document-templates-section" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed var(--border-card);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="margin: 0; font-size: 14px; color: var(--color-primary);">📄 제출 서류 양식 다운로드</h4>
+                    <span style="font-size: 11px; color: var(--text-muted);">아래 양식을 다운로드하여 작성 후 제출해 주세요.</span>
+                  </div>
+                  <div id="company-templates-container" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <!-- JS에서 동적 렌더링 -->
+                    <div style="font-size: 12px; color: var(--text-muted); padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; width: 100%; text-align: center;">등록된 양식이 없습니다.</div>
+                  </div>
+                </div>
+
                 <!-- Drag and drop zone -->
                 <div class="drag-drop-zone" id="file-drag-zone">
                   <input type="file" id="real-file-input" style="display: none;" accept=".pdf,.png,.jpg,.jpeg,.zip">

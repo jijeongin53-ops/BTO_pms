@@ -1058,11 +1058,45 @@ window.completeAcademy = async function() {
 
 // 6. [기업 대시보드] 렌더링 로직
 function renderCompanyDashboard() {
+  // 0) 양식 다운로드 렌더링
+  renderCompanyTemplates();
+  
   // 1) 제출된 서류 리스트 렌더링 (밍글무드 기준)
   renderCompanyDocs();
   
   // 2) 매칭 신청 인턴 리스트 렌더링
   renderCompanyCandidates();
+}
+
+function renderCompanyTemplates() {
+  const container = document.getElementById("company-templates-container");
+  if (!container) return;
+  
+  const templates = db.getTable("Document_Templates") || [];
+  container.innerHTML = "";
+  
+  if (templates.length === 0) {
+    container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; width: 100%; text-align: center;">등록된 양식이 없습니다.</div>`;
+    return;
+  }
+  
+  templates.forEach(tpl => {
+    const btn = document.createElement("a");
+    btn.href = tpl.DriveURL || "#";
+    btn.target = "_blank";
+    btn.className = "btn-sm btn-outline-sm";
+    btn.style.textDecoration = "none";
+    btn.style.display = "inline-flex";
+    btn.style.alignItems = "center";
+    btn.style.gap = "4px";
+    btn.style.padding = "6px 12px";
+    btn.style.fontSize = "12px";
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      ${tpl.FileName || tpl.DocType} 다운로드
+    `;
+    container.appendChild(btn);
+  });
 }
 
 function renderCompanyDocs() {
