@@ -422,6 +422,45 @@ function doPost(e) {
       
       return makeJsonResponse({ success: true, message: "User registered successfully" });
       
+    } else if (action === "uploadRealFile") {
+      var folderId = postData.folderId;
+      var fileData = postData.fileData; // base64 string
+      var fileName = postData.fileName;
+      var mimeType = postData.mimeType;
+      
+      // base64 prefix 제거 (e.g. "data:application/pdf;base64,JVBER...")
+      var base64Str = fileData;
+      if (fileData.indexOf("base64,") !== -1) {
+        base64Str = fileData.split("base64,")[1];
+      }
+      
+      var blob = Utilities.newBlob(Utilities.base64Decode(base64Str), mimeType, fileName);
+      var folder = DriveApp.getFolderById(folderId);
+      var file = folder.createFile(blob);
+      var driveUrl = file.getUrl();
+      
+      // 구글 시트에도 로깅
+      var sheet = ss.getSheetByName("Documents_Log");
+      if (!sheet) {
+        sheet = ss.insertSheet("Documents_Log");
+        sheet.appendRow(["DocID", "UserID", "CompanyName", "DocType", "OriginalName", "SavedName", "DriveURL", "Status", "UploadedTime"]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      
+      sheet.appendRow([
+        postData.DocID,
+        postData.UserID,
+        postData.CompanyName,
+        postData.DocType,
+        postData.OriginalName,
+        fileName,
+        driveUrl,
+        "Approved",
+        nowStr
+      ]);
+      
+      return makeJsonResponse({ success: true, url: driveUrl });
+      
     } else if (action === "applyProgram") {
       // 신규 사업 신청 기록
       var sheet = ss.getSheetByName("Application_Status");

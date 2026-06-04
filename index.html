@@ -428,19 +428,8 @@
                   <p class="upload-limit">PDF, ZIP, 이미지 최대 50MB</p>
                 </div>
                 
-                <!-- 문서 정규화 네이밍 옵션 -->
-                <div class="document-type-selector">
-                  <label for="doc-type-select">제출 서류 종류:</label>
-                  <div class="select-custom">
-                    <select id="doc-type-select">
-                      <option value="사업자등록증">사업자등록증</option>
-                      <option value="참여신청서">참여신청서</option>
-                      <option value="매칭협약서">매칭협약서</option>
-                      <option value="인턴출근부">인턴출근부</option>
-                    </select>
-                  </div>
-                </div>
-
+                <!-- 문서 정규화 네이밍 옵션 (숨김 처리, 기본값: 제출서류) -->
+                <input type="hidden" id="doc-type-select" value="제출서류">
                 <!-- 제출된 서류 리스트 (기업 기준) -->
                 <div class="submitted-docs-list">
                   <h4>제출 문서 목록</h4>

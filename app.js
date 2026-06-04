@@ -1312,7 +1312,16 @@ function initDragAndDrop() {
 }
 
 async function processFileUpload(file) {
-  const docType = document.getElementById("doc-type-select").value;
+  // UI Loading (Upload Progress)
+  const dragZone = document.getElementById("file-drag-zone");
+  const uploadPrompt = dragZone.querySelector(".upload-prompt");
+  const originalPrompt = uploadPrompt ? uploadPrompt.innerHTML : "";
+  if (uploadPrompt) uploadPrompt.innerHTML = "파일 업로드 중... 잠시만 기다려주세요.";
+  dragZone.style.pointerEvents = "none";
+  dragZone.style.opacity = "0.7";
+
+  const docTypeInput = document.getElementById("doc-type-select");
+  const docType = docTypeInput ? docTypeInput.value : "제출서류";
   const projectType = appState.currentProject; // Internship, Academy, Mice
   
   let projectCode = "인턴십";
@@ -1332,44 +1341,76 @@ async function processFileUpload(file) {
   
   const documents = db.getTable("Documents_Log");
   const newDocId = `DOC-${String(documents.length + 1).padStart(3, '0')}`;
-  const secureDriveUrl = `https://drive.google.com/open?id=1DriveSim_${Math.random().toString(36).substring(2, 10)}`;
 
-  const newDocRow = {
-    DocID: newDocId,
-    UserID: appState.currentUser,
-    CompanyName: companyName,
-    DocType: docType,
-    OriginalName: file.name,
-    SavedName: normalizedName,
-    DriveURL: secureDriveUrl,
-    Status: "Pending",
-    UploadedTime: getNowDateString()
-  };
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64Data = e.target.result;
+    
+    let finalDriveUrl = "";
+    
+    // 실시간 구글 시트 쓰기 연계 (업로드 및 로깅 동시 처리)
+    if (db.liveMode) {
+      try {
+        const response = await fetch(db.appsScriptUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain"
+          },
+          body: JSON.stringify({
+            action: "uploadRealFile",
+            folderId: "1GJ6IpmD2MVyG0aAWBTFK_xVkoEVSzzcu",
+            fileData: base64Data,
+            fileName: normalizedName,
+            mimeType: file.type || "application/octet-stream",
+            DocID: newDocId,
+            UserID: appState.currentUser,
+            CompanyName: companyName,
+            DocType: docType,
+            OriginalName: file.name
+          })
+        });
+        const resJson = await response.json();
+        if (resJson.success) {
+          finalDriveUrl = resJson.url;
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+      }
+    }
 
-  documents.push(newDocRow);
-  db.saveTable("Documents_Log", documents);
-  
-  // 실시간 구글 시트 쓰기 연계
-  if (db.liveMode) {
-    await db.writeToGoogleSheets({
-      action: "uploadDocument",
+    if (!finalDriveUrl) {
+      finalDriveUrl = `https://drive.google.com/open?id=1DriveSim_${Math.random().toString(36).substring(2, 10)}`;
+    }
+
+    const newDocRow = {
       DocID: newDocId,
       UserID: appState.currentUser,
       CompanyName: companyName,
       DocType: docType,
       OriginalName: file.name,
       SavedName: normalizedName,
-      DriveURL: secureDriveUrl,
-      Status: "Pending"
-    });
-  }
+      DriveURL: finalDriveUrl,
+      Status: "Approved", // 대기 대신 완료로 즉시 반영
+      UploadedTime: getNowDateString()
+    };
 
-  // 리렌더링
-  renderCompanyDocs();
+    documents.push(newDocRow);
+    db.saveTable("Documents_Log", documents);
+    
+    // UI 복구
+    if (uploadPrompt) uploadPrompt.innerHTML = originalPrompt;
+    dragZone.style.pointerEvents = "auto";
+    dragZone.style.opacity = "1";
+
+    // 리렌더링
+    renderCompanyDocs();
+    
+    // 시트 패널을 Documents_Log로 이동하고 방금 추가된 행 반짝이게 설정
+    appState.currentSheet = "Documents_Log";
+    renderSheetsEmulator(newDocId);
+  };
   
-  // 시트 패널을 Documents_Log로 이동하고 방금 추가된 행 반짝이게 설정
-  appState.currentSheet = "Documents_Log";
-  renderSheetsEmulator(newDocId);
+  reader.readAsDataURL(file);
 }
 
 // 9. [운영사 관리자 대시보드] 렌더링 로직
