@@ -762,7 +762,7 @@ function renderInternDashboard() {
   const companyListCard = document.getElementById("intern-company-list-card");
   const applicationFormCard = document.getElementById("intern-application-form-card");
   
-  specsContainer.innerHTML = "";
+  if (specsContainer) specsContainer.innerHTML = "";
 
   if (activeProj === "Internship") {
     if (companyListCard) companyListCard.style.display = "block";
