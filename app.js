@@ -520,6 +520,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 7) 파일 드래그 앤 드롭 영역 바인딩
   initDragAndDrop();
 
+  // 7-1) 인턴 신청서 업로드 바인딩
+  const internUploadBtn = document.getElementById("intern-upload-btn");
+  const internUploadInput = document.getElementById("intern-upload-input");
+  if (internUploadBtn && internUploadInput) {
+    internUploadBtn.addEventListener("click", () => internUploadInput.click());
+    internUploadInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        processInternFileUpload(e.target.files[0], internUploadBtn);
+      }
+    });
+  }
+
   // 8) 모달 닫기
   const modal = document.getElementById("pms-modal");
   const closeModalSpan = document.querySelector(".close-modal");
@@ -755,16 +767,18 @@ function renderInternDashboard() {
   if (activeProj === "Internship") {
     if (companyListCard) companyListCard.style.display = "block";
     if (applicationFormCard) applicationFormCard.style.display = "block";
-    specsContainer.innerHTML = `
-      <div class="widget-row">
-        <span class="widget-label">지정 이력서 파일</span>
-        <span class="widget-val">[이력서]${displayName}_관광MICE_2026.pdf</span>
-      </div>
-      <div class="widget-row">
-        <span class="widget-label">출석부 인증 상태</span>
-        <span class="widget-val" style="color: var(--status-warning)">제출 대기 (배정 후 활성화)</span>
-      </div>
-    `;
+    if (specsContainer) {
+      specsContainer.innerHTML = `
+        <div class="widget-row">
+          <span class="widget-label">지정 이력서 파일</span>
+          <span class="widget-val">[이력서]${displayName}_관광MICE_2026.pdf</span>
+        </div>
+        <div class="widget-row">
+          <span class="widget-label">출석부 인증 상태</span>
+          <span class="widget-val" style="color: var(--status-warning)">제출 대기 (배정 후 활성화)</span>
+        </div>
+      `;
+    }
 
     // 기업 리스트 렌더링
     const companyListEl = document.getElementById("intern-company-list");
@@ -830,11 +844,11 @@ function renderInternDashboard() {
     const rate = (attendedCount / 5 * 100).toFixed(0);
     
     // 원형 차트도 rate에 맞춤
-    progressVal.innerText = `${rate}%`;
-    progressCircle.setAttribute("stroke-dasharray", `${rate}, 100`);
+    if (progressVal) progressVal.innerText = `${rate}%`;
+    if (progressCircle) progressCircle.setAttribute("stroke-dasharray", `${rate}, 100`);
 
-    indicatorTitle.innerText = "아카데미 수료 진척도";
-    indicatorDesc.innerText = `총 5회차 중 ${attendedCount}회 출석 (${rate}% 참여율)`;
+    if (indicatorTitle) indicatorTitle.innerText = "아카데미 수료 진척도";
+    if (indicatorDesc) indicatorDesc.innerText = `총 5회차 중 ${attendedCount}회 출석 (${rate}% 참여율)`;
 
     // 5회차 출석 현황 상세 UI 렌더링
     let sessionsHTML = `<div class="academy-sessions-grid">`;
@@ -875,26 +889,29 @@ function renderInternDashboard() {
         </div>
       ` : ''}
     `;
+    }
     if (companyListCard) companyListCard.style.display = "none";
     if (applicationFormCard) applicationFormCard.style.display = "none";
   } else { // Mice
-    indicatorTitle.innerText = "공모전 서류 접수 통과";
-    indicatorDesc.innerText = "기획서 파일 무결성 및 인원 구성 검증 완료";
+    if (indicatorTitle) indicatorTitle.innerText = "공모전 서류 접수 통과";
+    if (indicatorDesc) indicatorDesc.innerText = "기획서 파일 무결성 및 인원 구성 검증 완료";
 
-    specsContainer.innerHTML = `
-      <div class="widget-row">
-        <span class="widget-label">공모전 접수 번호</span>
-        <span class="widget-val" style="color: var(--color-primary); font-family: monospace;">${currentStatus.RegistrationNo}</span>
-      </div>
-      <div class="widget-row">
-        <span class="widget-label">팀 이름 / 참가 규모</span>
-        <span class="widget-val">안티그래비티 (4명)</span>
-      </div>
-      <div class="widget-row">
-        <span class="widget-label">제출 기획안</span>
-        <span class="widget-val">[MICE]관광_혁신_아이디어_기획서_vFinal.pdf</span>
-      </div>
-    `;
+    if (specsContainer) {
+      specsContainer.innerHTML = `
+        <div class="widget-row">
+          <span class="widget-label">공모전 접수 번호</span>
+          <span class="widget-val" style="color: var(--color-primary); font-family: monospace;">${currentStatus.RegistrationNo}</span>
+        </div>
+        <div class="widget-row">
+          <span class="widget-label">팀 이름 / 참가 규모</span>
+          <span class="widget-val">안티그래비티 (4명)</span>
+        </div>
+        <div class="widget-row">
+          <span class="widget-label">제출 기획안</span>
+          <span class="widget-val">[MICE]관광_혁신_아이디어_기획서_vFinal.pdf</span>
+        </div>
+      `;
+    }
     if (companyListCard) companyListCard.style.display = "none";
     if (applicationFormCard) applicationFormCard.style.display = "none";
   }
@@ -1541,6 +1558,60 @@ async function processFileUpload(file) {
     // 시트 패널을 Documents_Log로 이동하고 방금 추가된 행 반짝이게 설정
     appState.currentSheet = "Documents_Log";
     renderSheetsEmulator(newDocId);
+  };
+  
+  reader.readAsDataURL(file);
+}
+
+async function processInternFileUpload(file, btn) {
+  const originalText = btn.innerHTML;
+  btn.innerHTML = `<span style="margin-right: 8px; font-size: 18px;">⏳</span> 업로드 중...`;
+  btn.style.pointerEvents = "none";
+  btn.style.opacity = "0.7";
+
+  const users = db.getTable("Master_Users") || [];
+  const currentUserObj = users.find(u => u.UserID === appState.currentUser);
+  const userName = currentUserObj ? currentUserObj.Name : "알수없음";
+  const dateStr = getNowDateCompact(); 
+  const ext = file.name.substring(file.name.lastIndexOf('.'));
+  const normalizedName = `[인턴십]_[${userName}]_[참여신청서]_${dateStr}${ext}`;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64Data = e.target.result;
+    
+    if (db.liveMode && db.appsScriptUrl) {
+      try {
+        fetch(db.appsScriptUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain"
+          },
+          body: JSON.stringify({
+            action: "uploadRealFile",
+            folderId: "1GJ6IpmD2MVyG0aAWBTFK_xVkoEVSzzcu",
+            fileData: base64Data,
+            fileName: normalizedName,
+            mimeType: file.type || "application/octet-stream",
+            DocID: "DOC-INTERN-" + Date.now(),
+            UserID: appState.currentUser,
+            CompanyName: userName,
+            DocType: "인턴십_참여신청서",
+            OriginalName: file.name
+          })
+        });
+      } catch (err) {
+        console.error("Upload error:", err);
+      }
+    }
+
+    setTimeout(() => {
+      btn.innerHTML = `<span style="margin-right: 8px; font-size: 18px;">✅</span> 업로드 완료`;
+      btn.style.pointerEvents = "auto";
+      btn.style.opacity = "1";
+      alert("신청서가 구글 드라이브에 성공적으로 업로드되었습니다.");
+    }, 1500);
   };
   
   reader.readAsDataURL(file);

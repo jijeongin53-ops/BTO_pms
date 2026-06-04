@@ -350,42 +350,15 @@
                   <a href="https://drive.google.com/file/d/1xJhuBSXTf-0q8x6BV3zccFilDGkbIpeO/view?usp=drive_link" target="_blank" class="btn btn-outline" style="flex: 1; justify-content: center; padding: 12px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; border: 1px solid var(--color-primary); color: var(--color-primary);">
                     <span style="margin-right: 8px; font-size: 18px;">📥</span> 참여 신청서 양식 다운로드
                   </a>
-                  <a href="https://drive.google.com/drive/u/0/folders/1GJ6IpmD2MVyG0aAWBTFK_xVkoEVSzzcu" target="_blank" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; background-color: var(--color-primary); color: #000; font-weight: 600;">
+                  <input type="file" id="intern-upload-input" style="display: none;" accept=".pdf,.png,.jpg,.jpeg,.zip">
+                  <button id="intern-upload-btn" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; background-color: var(--color-primary); color: #000; font-weight: 600; border: none; cursor: pointer;">
                     <span style="margin-right: 8px; font-size: 18px;">📤</span> 작성한 신청서 업로드 제출
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- 좌측: 실시간 참여/매칭 상세 현황 -->
-            <div class="dashboard-card glass-card">
-              <div class="card-header">
-                <h3>실시간 매칭 및 수료 현황</h3>
-              </div>
-              <div class="card-body flex-center-col">
-                <div class="progress-indicator-container">
-                  <!-- SVG circular progress -->
-                  <div class="circle-chart-wrapper">
-                    <svg class="circle-chart" viewBox="0 0 36 36">
-                      <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                      <path class="circle-fill" id="intern-progress-circle" stroke-dasharray="25, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    </svg>
-                    <div class="circle-percentage">
-                      <span id="intern-progress-value">25%</span>
-                    </div>
-                  </div>
-                  <div class="indicator-desc">
-                    <h4 id="intern-indicator-title">서류 통과 확률</h4>
-                    <p id="intern-indicator-desc">총 지원한 4개사 중 1개사 서류 합격</p>
-                  </div>
-                </div>
-                
-                <!-- 아카데미/공모전 특화 정보 -->
-                <div class="intern-detail-widget" id="intern-project-specs">
-                  <!-- Javascript 동적 로딩 -->
-                </div>
-              </div>
-            </div>
+
 
             <!-- 우측: 안내 및 알림판 (운영사 공지 연계) -->
             <div class="dashboard-card glass-card">
