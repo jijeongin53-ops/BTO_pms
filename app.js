@@ -1185,9 +1185,7 @@ function renderCompanyCandidates() {
       <div class="intern-profile" style="margin-bottom: 16px;">
         <div class="intern-meta">
           <h4>${u.Name} <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">/ ${u.School || '학교 미기재'}</span></h4>
-          <p>${cand.track}</p>
         </div>
-        <div class="score-badge">${cand.score}</div>
       </div>
       
       <!-- 6단계 현황 트래커 -->
