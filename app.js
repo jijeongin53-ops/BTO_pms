@@ -1073,7 +1073,7 @@ function renderCompanyDashboard() {
   // 0) 양식 다운로드 렌더링
   renderCompanyTemplates();
   
-  // 1) 제출된 서류 리스트 렌더링 (밍글무드 기준)
+  // 1) 제출된 서류 리스트 렌더링
   renderCompanyDocs();
   
   // 2) 매칭 신청 인턴 리스트 렌더링
@@ -1112,7 +1112,7 @@ function renderCompanyTemplates() {
 }
 
 function renderCompanyDocs() {
-  const docs = db.getTable("Documents_Log").filter(d => d.UserID === "company_01");
+  const docs = db.getTable("Documents_Log").filter(d => d.UserID === appState.currentUser);
   const container = document.getElementById("company-docs-container");
   container.innerHTML = "";
   
@@ -1319,7 +1319,9 @@ async function processFileUpload(file) {
   if (projectType === "Academy") projectCode = "아카데미";
   if (projectType === "Mice") projectCode = "MICE";
 
-  const companyName = "밍글무드";
+  const users = db.getTable("Master_Users") || [];
+  const currentUserObj = users.find(u => u.UserID === appState.currentUser);
+  const companyName = currentUserObj ? currentUserObj.Name : "알수없음";
   const dateStr = getNowDateCompact(); // YYYYMMDD 형태
   
   // 파일 확장자 분리
@@ -1334,7 +1336,7 @@ async function processFileUpload(file) {
 
   const newDocRow = {
     DocID: newDocId,
-    UserID: "company_01",
+    UserID: appState.currentUser,
     CompanyName: companyName,
     DocType: docType,
     OriginalName: file.name,
@@ -1352,7 +1354,7 @@ async function processFileUpload(file) {
     await db.writeToGoogleSheets({
       action: "uploadDocument",
       DocID: newDocId,
-      UserID: "company_01",
+      UserID: appState.currentUser,
       CompanyName: companyName,
       DocType: docType,
       OriginalName: file.name,
