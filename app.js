@@ -1176,30 +1176,106 @@ function renderCompanyCandidates() {
     }
 
     el.innerHTML = `
-      <div class="intern-profile">
+      <div class="intern-profile" style="margin-bottom: 16px;">
         <div class="intern-meta">
-          <h4>${u.Name} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(${u.Email})</span></h4>
+          <h4>${u.Name} <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">/ ${u.School || '학교 미기재'}</span></h4>
           <p>${cand.track}</p>
         </div>
         <div class="score-badge">${cand.score}</div>
       </div>
-      <div class="widget-row" style="border-top: 1px solid var(--border-card); padding-top: 10px;">
-        <span class="widget-label">현재 매칭 상태</span>
-        <span class="widget-val" style="color: ${stateColor}">${matchText}</span>
+      
+      <!-- 6단계 현황 트래커 -->
+      <div class="company-pipeline-container" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+        <div class="pipeline-header" style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px;">진행 현황 관리 (클릭하여 상태 변경)</div>
+        <div class="pipeline-steps" style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
+          <!-- 진행선 -->
+          <div style="position: absolute; top: 12px; left: 10px; right: 10px; height: 2px; background: rgba(255,255,255,0.1); z-index: 1;"></div>
+          
+          ${renderPipelineStepUI(cand.id, cand.status ? cand.status.PipelineStage : 0)}
+        </div>
       </div>
-      <div class="intern-actions">
+
+      <div class="intern-actions" style="border-top: 1px solid var(--border-card); padding-top: 12px; display: flex; gap: 8px; justify-content: flex-end;">
         <button class="btn-sm" onclick="viewResumeModal('${cand.id}')">이력서 열람</button>
-        <button class="btn-sm btn-primary-sm" onclick="updateCandidateMatch('${cand.id}', '면접합격/완료')">면접 결과 합격</button>
-        <button class="btn-sm" style="color:var(--status-error); border-color:var(--status-error-bg)" onclick="updateCandidateMatch('${cand.id}', '불합격/재배정')">불합격</button>
       </div>
     `;
     container.appendChild(el);
   });
 
   // 상단 매칭 뱃지 업데이트
-  const matchedCount = projects.filter(p => p.MatchingStatus === "매칭 완료").length;
+  const matchedCount = projects.filter(p => p.PipelineStage >= 5).length; // 5단계 이상 완료
   document.getElementById("company-matching-badge").innerText = `배정 완료: ${matchedCount}명 / 대기: ${projects.length - matchedCount}명`;
 }
+
+// 6단계 파이프라인 렌더링 헬퍼 함수
+function renderPipelineStepUI(internId, currentStep) {
+  const steps = [
+    { label: "신청" },
+    { label: "청년 현황" },
+    { label: "매칭 현황" },
+    { label: "청년 고용" },
+    { label: "서류 제출" }, // 4번 인덱스
+    { label: "사업 완료" }
+  ];
+  
+  let html = "";
+  steps.forEach((step, index) => {
+    const isCompleted = currentStep >= index;
+    const isActive = currentStep === index;
+    
+    let color = isCompleted ? "var(--color-primary)" : "var(--text-muted)";
+    let bg = isCompleted ? "var(--color-primary)" : "var(--bg-app)";
+    let border = isCompleted ? "var(--color-primary)" : "var(--border-card)";
+    let textStyle = isActive ? "color: var(--color-primary); font-weight: 700;" : (isCompleted ? "color: var(--text-main);" : "color: var(--text-muted);");
+    let glow = isActive ? "box-shadow: 0 0 10px var(--color-primary-glow);" : "";
+
+    html += `
+      <div class="pipe-step" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex: 1;" onclick="updatePipelineStatus('${internId}', ${index})">
+        <div class="pipe-dot" style="width: 24px; height: 24px; border-radius: 50%; background: ${bg}; border: 2px solid ${border}; display: flex; align-items: center; justify-content: center; transition: all 0.2s; ${glow}">
+          ${isCompleted ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+        </div>
+        <div style="font-size: 10px; text-align: center; line-height: 1.2; ${textStyle}">${step.label}</div>
+      </div>
+    `;
+  });
+  return html;
+}
+
+// 파이프라인 상태 업데이트 함수
+async function updatePipelineStatus(internId, newStepIndex) {
+  const projects = db.getTable("Project_Status");
+  const pIndex = projects.findIndex(p => p.UserID === internId && p.ProjectType === "Internship");
+  
+  if (pIndex !== -1) {
+    projects[pIndex].PipelineStage = newStepIndex;
+    
+    // UI 로직 매핑용 호환성 필드 업데이트 (기존 시스템 호환)
+    if (newStepIndex >= 5) {
+      projects[pIndex].MatchingStatus = "매칭 완료";
+    } else {
+      projects[pIndex].MatchingStatus = "심사 중";
+    }
+    
+    db.saveTable("Project_Status", projects);
+    
+    // 구글 시트 반영
+    if (db.liveMode) {
+      await db.writeToGoogleSheets({
+        action: "updatePipelineStage",
+        UserID: internId,
+        PipelineStage: newStepIndex
+      });
+    }
+    
+    renderCompanyCandidates();
+    
+    // 시트 에뮬레이터 리렌더링
+    appState.currentSheet = "Project_Status";
+    renderSheetsEmulator(appState.currentUser);
+  }
+}
+
+
 
 // 7. 이력서 모달 팝업 함수
 window.viewResumeModal = function(internID) {

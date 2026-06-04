@@ -461,6 +461,33 @@ function doPost(e) {
       
       return makeJsonResponse({ success: true, url: driveUrl });
       
+    } else if (action === "updatePipelineStage") {
+      var sheet = ss.getSheetByName("Project_Status");
+      if (sheet) {
+        var values = sheet.getDataRange().getValues();
+        var headers = values[0];
+        
+        // PipelineStage 컬럼 찾기 (없으면 끝에 추가)
+        var pipelineColIdx = headers.indexOf("PipelineStage");
+        if (pipelineColIdx === -1) {
+          pipelineColIdx = headers.length;
+          sheet.getRange(1, pipelineColIdx + 1).setValue("PipelineStage");
+        }
+        
+        for (var i = 1; i < values.length; i++) {
+          if (values[i][1] === postData.UserID && values[i][0] === "Internship") {
+            sheet.getRange(i + 1, pipelineColIdx + 1).setValue(postData.PipelineStage);
+            
+            // 5단계 이상(사업 완료)일 경우 호환성을 위해 매칭 완료 처리
+            if (postData.PipelineStage >= 5) {
+              sheet.getRange(i + 1, 4).setValue("매칭 완료"); // MatchingStatus (4번째 열)
+            }
+            break;
+          }
+        }
+      }
+      return makeJsonResponse({ success: true, message: "Pipeline updated" });
+
     } else if (action === "applyProgram") {
       // 신규 사업 신청 기록
       var sheet = ss.getSheetByName("Application_Status");
