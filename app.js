@@ -684,7 +684,24 @@ function renderInternDashboard() {
     // 📝 미신청 상태
     applyOverlay.style.display = "flex";
     gridContent.classList.add("blurred");
-    document.getElementById("apply-btn-container").style.display = "block";
+    
+    const applyBtnContainer = document.getElementById("apply-btn-container");
+    applyBtnContainer.style.display = "block";
+    
+    const today = new Date();
+    const miceStartDate = new Date("2026-09-20T00:00:00+09:00");
+    
+    if (activeProj === "Mice" && today < miceStartDate) {
+      applyBtnContainer.innerHTML = `
+        <button class="btn-sm" style="background-color: transparent; color: #fff; cursor: not-allowed; border: 1px solid #000; padding: 10px 20px; border-radius: 4px;" disabled>[신청 오픈 대기]</button>
+        <p style="color: var(--color-warning); font-size: 13px; margin-top: 10px;">⚠️ 관광 MICE 공모전 신청은 <strong>2026년 9월 20일</strong>부터 가능합니다.</p>
+      `;
+    } else {
+      applyBtnContainer.innerHTML = `
+        <button class="btn-sm btn-primary-sm" style="width: auto; padding: 10px 20px;" onclick="applyForCurrentProject()">신청하기 ➔</button>
+      `;
+    }
+
     document.getElementById("apply-complete-msg").style.display = "none";
     if (applyRejectMsg) applyRejectMsg.style.display = "none";
     document.getElementById("apply-icon").innerText = "📝";
@@ -813,7 +830,7 @@ function renderInternDashboard() {
           applyBtnHtml = `<span style="color: var(--status-success); font-weight: 700; font-size: 12px;">지원완료 ✅</span>`;
         } else {
           if (!isApplyEnabled) {
-            applyBtnHtml = `<button class="btn-sm" style="background-color: var(--color-secondary); color: var(--text-muted); cursor: not-allowed; border: none; padding: 4px 8px; border-radius: 4px;" disabled>[오픈 대기]</button>`;
+            applyBtnHtml = `<button class="btn-sm" style="background-color: transparent; color: #fff; cursor: not-allowed; border: 1px solid #000; padding: 4px 8px; border-radius: 4px;" disabled>[오픈 대기]</button>`;
           } else if (canApply) {
             applyBtnHtml = `<button class="btn-sm btn-primary-sm" onclick="applyToCompany('${comp.UserID}')">[희망]</button>`;
           } else {
