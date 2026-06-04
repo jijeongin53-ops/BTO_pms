@@ -761,10 +761,14 @@ function renderInternDashboard() {
   const specsContainer = document.getElementById("intern-project-specs");
   const companyListCard = document.getElementById("intern-company-list-card");
   const applicationFormCard = document.getElementById("intern-application-form-card");
+  const pipelineCard = document.getElementById("intern-pipeline-card");
+  const academyAttendanceCard = document.getElementById("intern-academy-attendance-card");
   
   if (specsContainer) specsContainer.innerHTML = "";
 
   if (activeProj === "Internship") {
+    if (pipelineCard) pipelineCard.style.display = "block";
+    if (academyAttendanceCard) academyAttendanceCard.style.display = "none";
     if (companyListCard) companyListCard.style.display = "block";
     if (applicationFormCard) applicationFormCard.style.display = "block";
     if (specsContainer) {
@@ -847,9 +851,6 @@ function renderInternDashboard() {
     if (progressVal) progressVal.innerText = `${rate}%`;
     if (progressCircle) progressCircle.setAttribute("stroke-dasharray", `${rate}, 100`);
 
-    if (indicatorTitle) indicatorTitle.innerText = "아카데미 수료 진척도";
-    if (indicatorDesc) indicatorDesc.innerText = `총 5회차 중 ${attendedCount}회 출석 (${rate}% 참여율)`;
-
     // 5회차 출석 현황 상세 UI 렌더링
     let sessionsHTML = `<div class="academy-sessions-grid">`;
     sessions.forEach(s => {
@@ -891,12 +892,34 @@ function renderInternDashboard() {
       ` : ''}
     `;
     }
+    
+    // Render the intern attendance table row
+    const tbody = document.getElementById("intern-academy-attendance-tbody");
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td style="font-weight: 600;">${appState.currentUser}</td>
+          <td>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+              ${sessions.map(s => `
+                <span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background: ${s.status === 'attended' ? 'var(--status-success-bg)' : 'var(--border-card)'}; color: ${s.status === 'attended' ? 'var(--status-success)' : '#fff'}; border: 1px solid ${s.status === 'attended' ? 'var(--status-success)' : 'transparent'};">
+                  ${s.session}회차 ${s.status === 'attended' ? '완료' : '대기'}
+                </span>
+              `).join('')}
+            </div>
+          </td>
+          <td>
+            <span style="font-weight: bold; color: var(--color-warning); border: 1px solid var(--color-warning); padding: 4px 10px; border-radius: 12px; font-size: 12px;">${rate}%</span>
+          </td>
+        </tr>
+      `;
+    }
+
+    if (pipelineCard) pipelineCard.style.display = "none";
+    if (academyAttendanceCard) academyAttendanceCard.style.display = "block";
     if (companyListCard) companyListCard.style.display = "none";
     if (applicationFormCard) applicationFormCard.style.display = "none";
   } else { // Mice
-    if (indicatorTitle) indicatorTitle.innerText = "공모전 서류 접수 통과";
-    if (indicatorDesc) indicatorDesc.innerText = "기획서 파일 무결성 및 인원 구성 검증 완료";
-
     if (specsContainer) {
       specsContainer.innerHTML = `
         <div class="widget-row">
@@ -913,6 +936,9 @@ function renderInternDashboard() {
         </div>
       `;
     }
+    
+    if (pipelineCard) pipelineCard.style.display = "block";
+    if (academyAttendanceCard) academyAttendanceCard.style.display = "none";
     if (companyListCard) companyListCard.style.display = "none";
     if (applicationFormCard) applicationFormCard.style.display = "none";
   }

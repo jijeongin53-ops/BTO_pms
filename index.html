@@ -297,7 +297,7 @@
 
           <div class="dashboard-grid" id="intern-grid-content">
             <!-- 단계별 프로세스 바 (인턴용) -->
-            <div class="dashboard-card span-full glass-card">
+            <div class="dashboard-card span-full glass-card" id="intern-pipeline-card">
               <div class="card-header">
                 <h3>진행 단계 및 프로세스 파이프라인</h3>
                 <span class="status-badge" id="intern-process-badge">서류심사 중</span>
@@ -358,6 +358,31 @@
               </div>
             </div>
 
+            <!-- 아카데미 출석 관리 (인턴용) -->
+            <div class="dashboard-card span-full glass-card" id="intern-academy-attendance-card" style="display: none;">
+              <div class="card-header">
+                <h3>아카데미 출석 관리 (전체 수강생)</h3>
+                <div class="card-actions">
+                  <span class="live-tag">LIVE SYNC</span>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="pms-table">
+                    <thead>
+                      <tr>
+                        <th style="width:25%">청년(인턴) 성명 및 ID</th>
+                        <th style="width:60%">회차별 출석 체크</th>
+                        <th style="width:15%">수료 진척도</th>
+                      </tr>
+                    </thead>
+                    <tbody id="intern-academy-attendance-tbody">
+                      <!-- JS 동적 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
 
 
             <!-- 우측: 안내 및 알림판 (운영사 공지 연계) -->
