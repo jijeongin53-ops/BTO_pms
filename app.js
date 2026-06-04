@@ -263,11 +263,16 @@ const appState = {
     renderSheetsEmulator();
   },
 
-  login(userId, role) {
+  async login(userId, role) {
     this.currentUser = userId;
     this.currentRole = role;
     document.getElementById("auth-view").classList.remove("active");
     document.getElementById("app-main-content").style.display = "block";
+    
+    // 자동 실시간 데이터 동기화
+    if (db.liveMode && db.appsScriptUrl) {
+      await db.fetchFromGoogleSheets();
+    }
     
     // 접속자 정보 표시 업데이트
     const users = db.getTable("Master_Users") || [];
@@ -1467,8 +1472,9 @@ async function processFileUpload(file) {
     // 실시간 구글 시트 쓰기 연계 (업로드 및 로깅 동시 처리)
     if (db.liveMode) {
       try {
-        const response = await fetch(db.appsScriptUrl, {
+        fetch(db.appsScriptUrl, {
           method: "POST",
+          mode: "no-cors",
           headers: {
             "Content-Type": "text/plain"
           },
@@ -1485,10 +1491,8 @@ async function processFileUpload(file) {
             OriginalName: file.name
           })
         });
-        const resJson = await response.json();
-        if (resJson.success) {
-          finalDriveUrl = resJson.url;
-        }
+        // no-cors 모드에서는 응답을 읽을 수 없으므로(opaque), 시뮬레이션 URL로 진행 후
+        // 차후 fetchFromGoogleSheets()가 호출될 때 실제 DriveURL로 덮어씌워짐.
       } catch (err) {
         console.error("Upload error:", err);
       }
