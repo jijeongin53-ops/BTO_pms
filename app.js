@@ -1154,11 +1154,17 @@ function renderCompanyCandidates() {
   const projects = db.getTable("Project_Status").filter(p => p.ProjectType === "Internship");
   const users = db.getTable("Master_Users");
   
-  // 기업에 매칭 가능한 목록 생성
-  const candidates = [
-    { id: "intern_01", track: "관광 MICE 기획 트랙", score: "95점", status: projects.find(p => p.UserID === "intern_01") },
-    { id: "intern_03", track: "관광 콘텐츠 개발 트랙", score: "88점", status: projects.find(p => p.UserID === "intern_03") }
-  ];
+  // 기업에 매칭 가능한 목록을 Project_Status에서 동적으로 생성
+  const candidates = projects.map(p => {
+    // 이력서 정보가 있으면 해당 정보 사용, 없으면 기본값
+    const resume = CANDIDATE_RESUMES[p.UserID];
+    return {
+      id: p.UserID,
+      track: resume ? resume.track : "관광 분야 일반 트랙",
+      score: resume ? resume.score : "대기중",
+      status: p
+    };
+  });
 
   candidates.forEach(cand => {
     const u = users.find(user => user.UserID === cand.id);
