@@ -14,7 +14,7 @@ const DEFAULT_USERS = [
 ];
 
 const DEFAULT_PROJECTS = [
-  { ProjectType: "Internship", UserID: "intern_01", Stage: "서류심사", MatchingStatus: "심사 중", ProgressPercent: "25", RegistrationNo: "N/A", UpdateTime: "2026-05-20 10:00:00" },
+  { ProjectType: "Internship", UserID: "intern_01", Stage: "참가신청", MatchingStatus: "심사 중", ProgressPercent: "25", RegistrationNo: "N/A", UpdateTime: "2026-05-20 10:00:00" },
   { ProjectType: "Academy", UserID: "intern_01", Stage: "수강중", MatchingStatus: "진행중", ProgressPercent: "80", RegistrationNo: "N/A", UpdateTime: "2026-05-19 14:00:00" },
   { ProjectType: "Mice", UserID: "intern_01", Stage: "모집공고", MatchingStatus: "신청 대기", ProgressPercent: "10", RegistrationNo: "MICE-2026-0042", UpdateTime: "2026-05-20 09:30:00" },
   
@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (role === "Intern") {
       const projects = db.getTable("Project_Status") || [];
       const nowStr = getNowDateString();
-      projects.push({ ProjectType: "Internship", UserID: userId, Stage: "서류심사", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
+      projects.push({ ProjectType: "Internship", UserID: userId, Stage: "참가신청", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       projects.push({ ProjectType: "Academy", UserID: userId, Stage: "수강대기", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       projects.push({ ProjectType: "Mice", UserID: userId, Stage: "모집공고", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       db.saveTable("Project_Status", projects);
@@ -718,7 +718,7 @@ function renderInternDashboard() {
   
   // 대시보드 내용 렌더링
   const currentStatus = projStatusList.find(p => p.UserID === appState.currentUser && p.ProjectType === activeProj) || {
-    Stage: "모집중", MatchingStatus: "지원 가능", ProgressPercent: "10", RegistrationNo: "N/A"
+    Stage: "참가신청", MatchingStatus: "지원 가능", ProgressPercent: "10", RegistrationNo: "N/A"
   };
 
   // 4) 단계별 프로세스 바 동적 생성
@@ -727,7 +727,7 @@ function renderInternDashboard() {
   
   let stages = [];
   if (activeProj === "Internship") {
-    stages = ["모집중", "서류심사", "면접전형", "최종매칭"];
+    stages = ["참가신청", "서류제출", "면접전형", "최종매칭"];
   } else if (activeProj === "Academy") {
     stages = ["신청대기", "수강중", "프로젝트수행", "최종수료"];
   } else { // Mice
@@ -1815,6 +1815,18 @@ window.approveDocument = async function(docID, newStatus) {
     // 리렌더
     renderOperatorDocsTable();
     
+    // [추가] 서류 승인 시 Project_Status 업데이트
+    if (newStatus === "승인" || newStatus === "Approved") {
+      const projects = db.getTable("Project_Status") || [];
+      const proj = projects.find(p => p.UserID === targetDoc.UserID && p.ProjectType === "Internship");
+      if (proj) {
+        proj.Stage = "면접전형";
+        proj.MatchingStatus = "서류통과";
+        proj.ProgressPercent = "50";
+        db.saveTable("Project_Status", projects);
+      }
+    }
+
     // 시트 모니터 포커싱 및 갱신 효과
     appState.currentSheet = "Documents_Log";
     renderSheetsEmulator(docID);
@@ -1886,9 +1898,9 @@ window.updateApplicationApproval = async function(applyId, newStatus) {
       const proj = projects.find(p => p.ProjectType === targetApp.ProjectType && p.UserID === targetApp.UserID);
       if (proj) {
         if (targetApp.ProjectType === "Internship") {
-          proj.Stage = "면접전형";
-          proj.MatchingStatus = "심사통과";
-          proj.ProgressPercent = "50";
+          proj.Stage = "서류제출";
+          proj.MatchingStatus = "승인완료";
+          proj.ProgressPercent = "25";
         } else if (targetApp.ProjectType === "Mice") {
           proj.Stage = "서류합격";
           proj.MatchingStatus = "진행중";

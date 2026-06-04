@@ -327,6 +327,26 @@ function doPost(e) {
       if (foundRow !== -1) {
         sheet.getRange(foundRow, 8).setValue(postData.Status); // Status 필드 업데이트
         
+        // [추가] 서류 승인 시 Project_Status 업데이트
+        if (postData.Status === "승인" || postData.Status === "Approved") {
+          var docType = values[foundRow - 1][3]; // DocType
+          var docUserId = values[foundRow - 1][1]; // UserID
+          if (docType === "인턴십_참여신청서") {
+            var projSheet = ss.getSheetByName("Project_Status");
+            if (projSheet) {
+              var pData = projSheet.getDataRange().getValues();
+              for (var k = 1; k < pData.length; k++) {
+                if (pData[k][0] === "Internship" && pData[k][1] === docUserId) {
+                  projSheet.getRange(k + 1, 3).setValue("면접전형");
+                  projSheet.getRange(k + 1, 4).setValue("서류통과");
+                  projSheet.getRange(k + 1, 5).setValue("50");
+                  break;
+                }
+              }
+            }
+          }
+        }
+        
         // 이메일 발송 연동
         var targetUserId = values[foundRow - 1][1];
         var email = getUserEmail(targetUserId);
@@ -409,7 +429,7 @@ function doPost(e) {
       if (postData.Role === "Intern") {
         var projSheet = ss.getSheetByName("Project_Status");
         if (projSheet) {
-          projSheet.appendRow(["Internship", postData.UserID, "서류심사", "신청 대기", "0", "N/A", nowStr]);
+          projSheet.appendRow(["Internship", postData.UserID, "참가신청", "신청 대기", "0", "N/A", nowStr]);
           projSheet.appendRow(["Academy", postData.UserID, "수강대기", "신청 대기", "0", "N/A", nowStr]);
           projSheet.appendRow(["Mice", postData.UserID, "모집공고", "신청 대기", "0", "N/A", nowStr]);
         }
@@ -571,9 +591,9 @@ function doPost(e) {
               for (var j = 1; j < pData.length; j++) {
                 if (pData[j][0] === projType && pData[j][1] === userId) {
                   if (projType === "Internship") {
-                    projSheet.getRange(j + 1, 3).setValue("면접전형");
-                    projSheet.getRange(j + 1, 4).setValue("심사통과");
-                    projSheet.getRange(j + 1, 5).setValue("50");
+                    projSheet.getRange(j + 1, 3).setValue("서류제출");
+                    projSheet.getRange(j + 1, 4).setValue("승인완료");
+                    projSheet.getRange(j + 1, 5).setValue("25");
                   } else if (projType === "Mice") {
                     projSheet.getRange(j + 1, 3).setValue("서류합격");
                     projSheet.getRange(j + 1, 4).setValue("진행중");
