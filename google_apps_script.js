@@ -335,13 +335,19 @@ function doPost(e) {
             var projSheet = ss.getSheetByName("Project_Status");
             if (projSheet) {
               var pData = projSheet.getDataRange().getValues();
+              var projFound = false;
               for (var k = 1; k < pData.length; k++) {
                 if (pData[k][0] === "Internship" && pData[k][1] === docUserId) {
                   projSheet.getRange(k + 1, 3).setValue("면접전형");
                   projSheet.getRange(k + 1, 4).setValue("서류통과");
                   projSheet.getRange(k + 1, 5).setValue("50");
+                  projFound = true;
                   break;
                 }
+              }
+              if (!projFound) {
+                var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+                projSheet.appendRow(["Internship", docUserId, "면접전형", "서류통과", "50", "N/A", nowStr]);
               }
             }
           }
@@ -588,6 +594,7 @@ function doPost(e) {
             var projSheet = ss.getSheetByName("Project_Status");
             if (projSheet) {
               var pData = projSheet.getDataRange().getValues();
+              var pFound = false;
               for (var j = 1; j < pData.length; j++) {
                 if (pData[j][0] === projType && pData[j][1] === userId) {
                   if (projType === "Internship") {
@@ -599,7 +606,18 @@ function doPost(e) {
                     projSheet.getRange(j + 1, 4).setValue("진행중");
                     projSheet.getRange(j + 1, 5).setValue("50");
                   }
+                  pFound = true;
                   break;
+                }
+              }
+              if (!pFound) {
+                var pNowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+                if (projType === "Internship") {
+                  projSheet.appendRow(["Internship", userId, "서류제출", "승인완료", "25", "N/A", pNowStr]);
+                } else if (projType === "Mice") {
+                  projSheet.appendRow(["Mice", userId, "서류합격", "진행중", "50", "N/A", pNowStr]);
+                } else {
+                  projSheet.appendRow([projType, userId, "승인됨", "진행중", "0", "N/A", pNowStr]);
                 }
               }
             }

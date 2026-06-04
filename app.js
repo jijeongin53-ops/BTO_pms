@@ -1823,8 +1823,18 @@ window.approveDocument = async function(docID, newStatus) {
         proj.Stage = "면접전형";
         proj.MatchingStatus = "서류통과";
         proj.ProgressPercent = "50";
-        db.saveTable("Project_Status", projects);
+      } else {
+        projects.push({
+          ProjectType: "Internship",
+          UserID: targetDoc.UserID,
+          Stage: "면접전형",
+          MatchingStatus: "서류통과",
+          ProgressPercent: "50",
+          RegistrationNo: "N/A",
+          UpdateTime: getNowDateString()
+        });
       }
+      db.saveTable("Project_Status", projects);
     }
 
     // 시트 모니터 포커싱 및 갱신 효과
@@ -1906,8 +1916,30 @@ window.updateApplicationApproval = async function(applyId, newStatus) {
           proj.MatchingStatus = "진행중";
           proj.ProgressPercent = "50";
         }
-        db.saveTable("Project_Status", projects);
+      } else {
+        let newStage = "승인완료";
+        let newMatch = "진행중";
+        let newProg = "0";
+        if (targetApp.ProjectType === "Internship") {
+          newStage = "서류제출";
+          newMatch = "승인완료";
+          newProg = "25";
+        } else if (targetApp.ProjectType === "Mice") {
+          newStage = "서류합격";
+          newMatch = "진행중";
+          newProg = "50";
+        }
+        projects.push({
+          ProjectType: targetApp.ProjectType,
+          UserID: targetApp.UserID,
+          Stage: newStage,
+          MatchingStatus: newMatch,
+          ProgressPercent: newProg,
+          RegistrationNo: "N/A",
+          UpdateTime: getNowDateString()
+        });
       }
+      db.saveTable("Project_Status", projects);
     }
     
     // 실시간 구글 시트 쓰기 연계
