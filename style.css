@@ -806,7 +806,7 @@ input:checked + .slider:before {
 /* 12. 매칭 인턴 관리 카드 */
 .intern-cards-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 12px;
   max-height: 480px;
   overflow-y: auto;
