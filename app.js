@@ -100,6 +100,9 @@ class PMSDatabase {
     if (!localStorage.getItem("PMS_Admin_Dashboard")) {
       localStorage.setItem("PMS_Admin_Dashboard", JSON.stringify([]));
     }
+    if (!localStorage.getItem("PMS_Document_Templates")) {
+      localStorage.setItem("PMS_Document_Templates", JSON.stringify([]));
+    }
   }
 
   getTable(tableName) {
@@ -174,6 +177,15 @@ class PMSDatabase {
         }
         if (res.data.Notices) {
           localStorage.setItem("PMS_Notices", JSON.stringify(res.data.Notices));
+        }
+        if (res.data.Document_Templates) {
+          localStorage.setItem("PMS_Document_Templates", JSON.stringify(res.data.Document_Templates));
+        }
+        if (res.data.Academy_Attendance) {
+          localStorage.setItem("PMS_Academy_Attendance", JSON.stringify(res.data.Academy_Attendance));
+        }
+        if (res.data.Inquiries) {
+          localStorage.setItem("PMS_Inquiries", JSON.stringify(res.data.Inquiries));
         }
         
         if (syncBadge) {
