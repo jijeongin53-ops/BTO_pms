@@ -740,10 +740,12 @@ function renderInternDashboard() {
   const indicatorTitle = document.getElementById("intern-indicator-title");
   const indicatorDesc = document.getElementById("intern-indicator-desc");
   const specsContainer = document.getElementById("intern-project-specs");
+  const companyListCard = document.getElementById("intern-company-list-card");
   
   specsContainer.innerHTML = "";
 
   if (activeProj === "Internship") {
+    if (companyListCard) companyListCard.style.display = "block";
     specsContainer.innerHTML = `
       <div class="widget-row">
         <span class="widget-label">지정 이력서 파일</span>
@@ -857,6 +859,7 @@ function renderInternDashboard() {
         </div>
       ` : ''}
     `;
+    if (companyListCard) companyListCard.style.display = "none";
   } else { // Mice
     indicatorTitle.innerText = "공모전 서류 접수 통과";
     indicatorDesc.innerText = "기획서 파일 무결성 및 인원 구성 검증 완료";
@@ -875,6 +878,7 @@ function renderInternDashboard() {
         <span class="widget-val">[MICE]관광_혁신_아이디어_기획서_vFinal.pdf</span>
       </div>
     `;
+    if (companyListCard) companyListCard.style.display = "none";
   }
 
   // 6) 공지사항 로딩 (현재 프로젝트 타입 및 전체 공지만 필터링)
