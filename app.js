@@ -753,10 +753,10 @@ function renderInternDashboard() {
   const progressCircle = document.getElementById("intern-progress-circle");
   
   const pct = parseInt(currentStatus.ProgressPercent);
-  progressVal.innerText = `${pct}%`;
+  if (progressVal) progressVal.innerText = `${pct}%`;
   
   // SVG stroke-dasharray 계산
-  progressCircle.setAttribute("stroke-dasharray", `${pct}, 100`);
+  if (progressCircle) progressCircle.setAttribute("stroke-dasharray", `${pct}, 100`);
 
   const specsContainer = document.getElementById("intern-project-specs");
   const companyListCard = document.getElementById("intern-company-list-card");
