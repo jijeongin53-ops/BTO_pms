@@ -77,13 +77,13 @@ class PMSDatabase {
   initDatabase() {
     // Legacy wipe logic removed to prevent race conditions and data loss
     if (!localStorage.getItem("PMS_Master_Users")) {
-      localStorage.setItem("PMS_Master_Users", JSON.stringify([]));
+      localStorage.setItem("PMS_Master_Users", JSON.stringify(DEFAULT_USERS));
     }
     if (!localStorage.getItem("PMS_Project_Status")) {
-      localStorage.setItem("PMS_Project_Status", JSON.stringify([]));
+      localStorage.setItem("PMS_Project_Status", JSON.stringify(DEFAULT_PROJECTS));
     }
     if (!localStorage.getItem("PMS_Documents_Log")) {
-      localStorage.setItem("PMS_Documents_Log", JSON.stringify([]));
+      localStorage.setItem("PMS_Documents_Log", JSON.stringify(DEFAULT_DOCUMENTS));
     }
     if (!localStorage.getItem("PMS_Notices") || localStorage.getItem("PMS_Notices") === "[]") {
       localStorage.setItem("PMS_Notices", JSON.stringify(DEFAULT_NOTICES));
@@ -98,7 +98,7 @@ class PMSDatabase {
       localStorage.setItem("PMS_Application_Status", JSON.stringify([]));
     }
     if (!localStorage.getItem("PMS_Admin_Dashboard")) {
-      localStorage.setItem("PMS_Admin_Dashboard", JSON.stringify([]));
+      localStorage.setItem("PMS_Admin_Dashboard", JSON.stringify(DEFAULT_ADMIN_DASHBOARD));
     }
     if (!localStorage.getItem("PMS_Document_Templates")) {
       localStorage.setItem("PMS_Document_Templates", JSON.stringify([]));

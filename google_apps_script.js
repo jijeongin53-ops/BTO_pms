@@ -30,13 +30,15 @@ function initializeSheets() {
   
   // 2) Project_Status 탭 초기화
   var sheetProjects = ss.getSheetByName("Project_Status") || ss.insertSheet("Project_Status");
-  sheetProjects.clear();
-  sheetProjects.appendRow(["ProjectType", "UserID", "Stage", "MatchingStatus", "ProgressPercent", "RegistrationNo", "UpdateTime"]);
+  if (sheetProjects.getLastRow() === 0) {
+    sheetProjects.appendRow(["ProjectType", "UserID", "Stage", "MatchingStatus", "ProgressPercent", "RegistrationNo", "UpdateTime"]);
+  }
   
   // 3) Documents_Log 탭 초기화
   var sheetDocs = ss.getSheetByName("Documents_Log") || ss.insertSheet("Documents_Log");
-  sheetDocs.clear();
-  sheetDocs.appendRow(["DocID", "UserID", "CompanyName", "DocType", "OriginalName", "SavedName", "DriveURL", "Status", "UploadedTime"]);
+  if (sheetDocs.getLastRow() === 0) {
+    sheetDocs.appendRow(["DocID", "UserID", "CompanyName", "DocType", "OriginalName", "SavedName", "DriveURL", "Status", "UploadedTime"]);
+  }
 
   // 4) Registered_Users 탭 초기화 (신규 가입자 저장용)
   var sheetReg = ss.getSheetByName("Registered_Users") || ss.insertSheet("Registered_Users");
@@ -66,10 +68,11 @@ function initializeSheets() {
 
   // 6) Admin_Dashboard 탭 초기화 (관리자 예산 및 목표 인원 관리)
   var sheetAdmin = ss.getSheetByName("Admin_Dashboard") || ss.insertSheet("Admin_Dashboard");
-  sheetAdmin.clear();
-  sheetAdmin.appendRow(["TotalBudget", "ExecutedBudget", "RemainingBudget", "InternGoal", "LastUpdated"]);
-  var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
-  sheetAdmin.appendRow([0, 0, 0, 30, nowStr]);
+  if (sheetAdmin.getLastRow() === 0) {
+    sheetAdmin.appendRow(["TotalBudget", "ExecutedBudget", "RemainingBudget", "InternGoal", "LastUpdated"]);
+    var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+    sheetAdmin.appendRow([0, 0, 0, 30, nowStr]);
+  }
 
   // 7) Notices 탭 초기화 (공지사항 관리용)
   var sheetNotices = ss.getSheetByName("Notices") || ss.insertSheet("Notices");
@@ -134,6 +137,17 @@ function sendNotificationEmail(email, status) {
     MailApp.sendEmail(email, subject, body);
   } catch(e) {
     // Ignore error
+  }
+}
+
+function sendAdminNotificationEmail(subject, body) {
+  var admins = ["jijeongin53@gmail.com", "wjddjs9919@gmail.com"];
+  for (var i = 0; i < admins.length; i++) {
+    try {
+      MailApp.sendEmail(admins[i], subject, body);
+    } catch(e) {
+      // Ignore error
+    }
   }
 }
 
@@ -381,6 +395,11 @@ function doPost(e) {
         postData.Status,
         nowStr
       ]);
+      
+      var subject = "[알림] 서류 제출 완료";
+      var body = "기업이 서류를 제출했습니다.\n- 기업명: " + postData.CompanyName + "\n- 서류 종류: " + postData.DocType;
+      sendAdminNotificationEmail(subject, body);
+      
       return makeJsonResponse({ success: true, message: "Document logged successfully" });
       
     } else if (action === "registerUser") {
@@ -446,6 +465,10 @@ function doPost(e) {
         }
       }
       
+      var subject = "[알림] 신규 회원 가입";
+      var body = "새로운 회원이 가입했습니다.\n- 아이디: " + postData.UserID + "\n- 역할: " + postData.Role + "\n- 이름/기업명: " + (postData.Name || postData.CompanyName);
+      sendAdminNotificationEmail(subject, body);
+      
       return makeJsonResponse({ success: true, message: "User registered successfully" });
       
     } else if (action === "uploadRealFile") {
@@ -484,6 +507,10 @@ function doPost(e) {
         "Approved",
         nowStr
       ]);
+      
+      var subject = "[알림] 서류 제출 완료";
+      var body = "기업이 서류를 제출했습니다.\n- 기업명: " + postData.CompanyName + "\n- 서류 종류: " + postData.DocType + "\n- 파일명: " + fileName;
+      sendAdminNotificationEmail(subject, body);
       
       return makeJsonResponse({ success: true, url: driveUrl });
       
@@ -568,6 +595,10 @@ function doPost(e) {
         nowStr,
         ""
       ]);
+      
+      var subject = "[알림] 프로그램 신청 접수";
+      var body = "청년 회원이 프로그램을 신청했습니다.\n- 아이디: " + postData.UserID + "\n- 신청 프로그램: " + postData.ProjectType;
+      sendAdminNotificationEmail(subject, body);
       
       return makeJsonResponse({ success: true, message: "Application submitted successfully" });
       
