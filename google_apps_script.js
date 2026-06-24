@@ -574,13 +574,19 @@ function doPost(e) {
       if (!sheet) return makeJsonResponse({ success: false, error: "Sheet not found" });
       
       var data = sheet.getDataRange().getValues();
+      var headers = data[0];
+      var projTypeIdx = headers.indexOf("ProjectType");
+      var userIdIdx = headers.indexOf("UserID");
+      var companyIdIdx = headers.indexOf("CompanyID");
+      
       var found = false;
-      // 역순으로 탐색해서 삭제하는 것이 안전할 수 있으나 하나만 찾아서 삭제
-      for (var i = 1; i < data.length; i++) {
-        if (data[i][0] === postData.ProjectType && data[i][1] === postData.UserID && data[i][7] === postData.CompanyID) {
-          sheet.deleteRow(i + 1);
-          found = true;
-          break;
+      if (projTypeIdx !== -1 && userIdIdx !== -1 && companyIdIdx !== -1) {
+        for (var i = 1; i < data.length; i++) {
+          if (data[i][projTypeIdx] === postData.ProjectType && data[i][userIdIdx] === postData.UserID && data[i][companyIdIdx] === postData.CompanyID) {
+            sheet.deleteRow(i + 1);
+            found = true;
+            break;
+          }
         }
       }
       
