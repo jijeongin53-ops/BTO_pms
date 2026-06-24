@@ -569,6 +569,27 @@ function doPost(e) {
       ]);
       return makeJsonResponse({ success: true, message: "Applied to company successfully" });
 
+    } else if (action === "cancelCompanyApplication") {
+      var sheet = ss.getSheetByName("Project_Status");
+      if (!sheet) return makeJsonResponse({ success: false, error: "Sheet not found" });
+      
+      var data = sheet.getDataRange().getValues();
+      var found = false;
+      // 역순으로 탐색해서 삭제하는 것이 안전할 수 있으나 하나만 찾아서 삭제
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][0] === postData.ProjectType && data[i][1] === postData.UserID && data[i][7] === postData.CompanyID) {
+          sheet.deleteRow(i + 1);
+          found = true;
+          break;
+        }
+      }
+      
+      if (found) {
+        return makeJsonResponse({ success: true, message: "Application canceled successfully" });
+      } else {
+        return makeJsonResponse({ success: false, error: "Application not found" });
+      }
+
     } else if (action === "applyProgram") {
       // 신규 사업 신청 기록
       var sheet = ss.getSheetByName("Application_Status");

@@ -827,7 +827,10 @@ function renderInternDashboard() {
         
         let applyBtnHtml = "";
         if (hasAppliedToThis) {
-          applyBtnHtml = `<span style="color: var(--status-success); font-weight: 700; font-size: 12px;">지원완료 ✅</span>`;
+          applyBtnHtml = `
+            <span style="color: var(--status-success); font-weight: 700; font-size: 12px; margin-right: 5px;">지원완료 ✅</span>
+            <button class="btn-sm" style="background-color: transparent; color: #ff4d4d; border: 1px solid #ff4d4d; padding: 2px 5px; border-radius: 4px; cursor: pointer; font-size: 11px;" onclick="cancelCompanyApplication('${comp.UserID}')">취소</button>
+          `;
         } else {
           if (!isApplyEnabled) {
             applyBtnHtml = `<button class="btn-sm" style="background-color: transparent; color: #fff; cursor: not-allowed; border: 1px solid #000; padding: 4px 8px; border-radius: 4px;" disabled>[오픈 대기]</button>`;
@@ -2262,6 +2265,38 @@ window.applyToCompany = async function(companyId) {
   }
   
   alert("해당 기업에 성공적으로 지원했습니다!");
+};
+
+// --- [기업 희망 지원 취소 액션] ---
+window.cancelCompanyApplication = async function(companyId) {
+  if (!confirm("해당 기업 지원을 취소하시겠습니까?")) return;
+
+  let applications = db.getTable("Project_Status") || [];
+  
+  // 찾아서 삭제
+  const initialLength = applications.length;
+  applications = applications.filter(a => !(a.UserID === appState.currentUser && a.ProjectType === "Internship" && a.CompanyID === companyId));
+  
+  if (applications.length === initialLength) {
+    alert("취소할 지원 내역을 찾을 수 없습니다.");
+    return;
+  }
+  
+  const postData = {
+    action: "cancelCompanyApplication",
+    UserID: appState.currentUser,
+    ProjectType: "Internship",
+    CompanyID: companyId
+  };
+  
+  db.saveTable("Project_Status", applications);
+  appState.updateUI();
+  
+  if (db.liveMode) {
+    await db.writeToGoogleSheets(postData);
+  }
+  
+  alert("기업 지원이 취소되었습니다.");
 };
 
 window.openNoticeModal = function(arg1, content, date) {
