@@ -1624,6 +1624,8 @@ async function processInternFileUpload(file, btn) {
   reader.onload = async function(e) {
     const base64Data = e.target.result;
     
+    let finalDriveUrl = "";
+
     if (db.liveMode && db.appsScriptUrl) {
       try {
         fetch(db.appsScriptUrl, {
@@ -1649,6 +1651,26 @@ async function processInternFileUpload(file, btn) {
         console.error("Upload error:", err);
       }
     }
+
+    if (!finalDriveUrl) {
+      finalDriveUrl = `https://drive.google.com/open?id=1DriveSim_${Math.random().toString(36).substring(2, 10)}`;
+    }
+
+    const documents = db.getTable("Documents_Log") || [];
+    const newDocRow = {
+      DocID: "DOC-INTERN-" + Date.now(),
+      UserID: appState.currentUser,
+      CompanyName: userName,
+      DocType: "인턴십_참여신청서",
+      OriginalName: file.name,
+      SavedName: normalizedName,
+      DriveURL: finalDriveUrl,
+      Status: "Approved", 
+      UploadedTime: getNowDateString()
+    };
+
+    documents.push(newDocRow);
+    db.saveTable("Documents_Log", documents);
 
     setTimeout(() => {
       btn.innerHTML = `<span style="margin-right: 8px; font-size: 18px;">✅</span> 업로드 완료`;
