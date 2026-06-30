@@ -1631,11 +1631,10 @@ async function processInternFileUpload(file, btn) {
 
     if (db.liveMode && db.appsScriptUrl) {
       try {
-        fetch(db.appsScriptUrl, {
+        const response = await fetch(db.appsScriptUrl, {
           method: "POST",
-          mode: "no-cors",
           headers: {
-            "Content-Type": "text/plain"
+            "Content-Type": "text/plain;charset=utf-8"
           },
           body: JSON.stringify({
             action: "uploadRealFile",
@@ -1650,12 +1649,30 @@ async function processInternFileUpload(file, btn) {
             OriginalName: file.name
           })
         });
+        
+        const res = await response.json();
+        if (res.success && res.url) {
+          finalDriveUrl = res.url;
+        } else {
+          console.error("Upload failed in Apps Script:", res.error);
+          alert("파일 업로드 중 서버 에러가 발생했습니다: " + res.error);
+          btn.innerHTML = `<span style="margin-right: 8px; font-size: 18px;">❌</span> 업로드 실패`;
+          btn.style.pointerEvents = "auto";
+          btn.style.opacity = "1";
+          return;
+        }
       } catch (err) {
         console.error("Upload error:", err);
+        alert("파일 업로드 통신 오류가 발생했습니다. 구글 앱스 스크립트 권한을 확인해주세요.");
+        btn.innerHTML = `<span style="margin-right: 8px; font-size: 18px;">❌</span> 통신 오류`;
+        btn.style.pointerEvents = "auto";
+        btn.style.opacity = "1";
+        return;
       }
     }
 
     if (!finalDriveUrl) {
+      // 로컬 모드일 때 임시 URL
       finalDriveUrl = `https://drive.google.com/open?id=1DriveSim_${Math.random().toString(36).substring(2, 10)}`;
     }
 
@@ -1674,6 +1691,11 @@ async function processInternFileUpload(file, btn) {
 
     documents.push(newDocRow);
     db.saveTable("Documents_Log", documents);
+    
+    // 자동 새로고침(동기화)
+    if (db.liveMode) {
+      await db.fetchFromGoogleSheets();
+    }
 
     setTimeout(() => {
       btn.innerHTML = `<span style="margin-right: 8px; font-size: 18px;">✅</span> 업로드 완료`;
