@@ -420,7 +420,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const projects = db.getTable("Project_Status") || [];
       const nowStr = getNowDateString();
       projects.push({ ProjectType: "Internship", UserID: userId, Stage: "참가신청", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
-      projects.push({ ProjectType: "Academy", UserID: userId, Stage: "수강대기", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
+      projects.push({ ProjectType: "Academy", UserID: userId, Stage: "모집 마감", MatchingStatus: "모집 마감", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       projects.push({ ProjectType: "Mice", UserID: userId, Stage: "모집공고", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       db.saveTable("Project_Status", projects);
 
@@ -691,7 +691,12 @@ function renderInternDashboard() {
     const today = new Date();
     const miceStartDate = new Date("2026-09-20T00:00:00+09:00");
     
-    if (activeProj === "Mice" && today < miceStartDate) {
+    if (activeProj === "Academy") {
+      applyBtnContainer.innerHTML = `
+        <button class="btn-sm" style="background-color: transparent; color: #fff; cursor: not-allowed; border: 1px solid #000; padding: 10px 20px; border-radius: 4px;" disabled>[모집 마감]</button>
+        <p style="color: var(--color-warning); font-size: 13px; margin-top: 10px;">⚠️ 취창업 아카데미 교육 코스는 현재 모집이 마감되었습니다.</p>
+      `;
+    } else if (activeProj === "Mice" && today < miceStartDate) {
       applyBtnContainer.innerHTML = `
         <button class="btn-sm" style="background-color: transparent; color: #fff; cursor: not-allowed; border: 1px solid #000; padding: 10px 20px; border-radius: 4px;" disabled>[신청 오픈 대기]</button>
         <p style="color: var(--color-warning); font-size: 13px; margin-top: 10px;">⚠️ 관광 MICE 공모전 신청은 <strong>2026년 9월 20일</strong>부터 가능합니다.</p>

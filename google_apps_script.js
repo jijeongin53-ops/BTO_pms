@@ -455,7 +455,7 @@ function doPost(e) {
         var projSheet = ss.getSheetByName("Project_Status");
         if (projSheet) {
           projSheet.appendRow(["Internship", postData.UserID, "참가신청", "신청 대기", "0", "N/A", nowStr]);
-          projSheet.appendRow(["Academy", postData.UserID, "수강대기", "신청 대기", "0", "N/A", nowStr]);
+          projSheet.appendRow(["Academy", postData.UserID, "모집 마감", "모집 마감", "0", "N/A", nowStr]);
           projSheet.appendRow(["Mice", postData.UserID, "모집공고", "신청 대기", "0", "N/A", nowStr]);
         }
         
