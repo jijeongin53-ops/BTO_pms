@@ -71,7 +71,7 @@ class PMSDatabase {
     this.liveMode = true;
     
     // 사용자 요청: 배포된 Google Apps Script URL 하드코딩
-    this.appsScriptUrl = "https://script.google.com/macros/s/AKfycbzTb5lBpPS2jmN0mdeYVOf58HAj6Ol6b-nG2MdeEjgXhi3rkl-JQCet5QwvDWFi2hXD/exec";
+    this.appsScriptUrl = "https://script.google.com/macros/s/AKfycby1S4Kj09a-K8n4qsEJERG77Vz-E5IHxn0yhxpMyhAU9fuM2AHAelXucqY_nwRGG6En/exec";
   }
 
   initDatabase() {
