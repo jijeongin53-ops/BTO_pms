@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (role === "Intern") {
       const projects = db.getTable("Project_Status") || [];
       const nowStr = getNowDateString();
-      projects.push({ ProjectType: "Internship", UserID: userId, Stage: "참가신청", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
+      projects.push({ ProjectType: "Internship", UserID: userId, Stage: "인턴십 지원 마감", MatchingStatus: "인턴십 지원 마감", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       projects.push({ ProjectType: "Academy", UserID: userId, Stage: "모집 마감", MatchingStatus: "모집 마감", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       projects.push({ ProjectType: "Mice", UserID: userId, Stage: "모집공고", MatchingStatus: "신청 대기", ProgressPercent: "0", RegistrationNo: "N/A", UpdateTime: nowStr });
       db.saveTable("Project_Status", projects);
@@ -695,6 +695,11 @@ function renderInternDashboard() {
       applyBtnContainer.innerHTML = `
         <button class="btn-sm" style="background-color: transparent; color: #fff; cursor: not-allowed; border: 1px solid #000; padding: 10px 20px; border-radius: 4px;" disabled>[모집 마감]</button>
         <p style="color: var(--color-warning); font-size: 13px; margin-top: 10px;">⚠️ 취창업 아카데미 교육 코스는 현재 모집이 마감되었습니다.</p>
+      `;
+    } else if (activeProj === "Internship") {
+      applyBtnContainer.innerHTML = `
+        <button class="btn-sm" style="background-color: transparent; color: #fff; cursor: not-allowed; border: 1px solid #000; padding: 10px 20px; border-radius: 4px;" disabled>[인턴십 지원 마감]</button>
+        <p style="color: var(--color-warning); font-size: 13px; margin-top: 10px;">⚠️ 인턴십 매칭 프로그램은 현재 지원이 마감되었습니다.</p>
       `;
     } else if (activeProj === "Mice" && today < miceStartDate) {
       applyBtnContainer.innerHTML = `
