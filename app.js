@@ -816,9 +816,10 @@ function renderInternDashboard() {
     if (companyListEl) {
       companyListEl.innerHTML = "";
       const companies = users.filter(u => u.Role === "Company");
+      const companyIds = companies.map(c => c.UserID);
       
-      // 현재 사용자가 지원한 기업 내역 파악
-      const myApplications = projStatusList.filter(p => p.UserID === appState.currentUser && p.ProjectType === "Internship" && p.CompanyID);
+      // 현재 사용자가 지원한 기업 내역 파악 (삭제된 기업 제외)
+      const myApplications = projStatusList.filter(p => p.UserID === appState.currentUser && p.ProjectType === "Internship" && p.CompanyID && companyIds.includes(p.CompanyID));
       
       // 지원 현황 뱃지 업데이트
       const applyCountBadge = document.getElementById("intern-apply-count-badge");
@@ -2255,7 +2256,10 @@ window.submitInquiry = async function() {
 // --- [기업 희망 지원 액션] ---
 window.applyToCompany = async function(companyId) {
   const applications = db.getTable("Project_Status") || [];
-  const myApplications = applications.filter(a => a.UserID === appState.currentUser && a.ProjectType === "Internship" && a.CompanyID);
+  const users = db.getTable("Master_Users") || [];
+  const activeCompanyIds = users.filter(u => u.Role === "Company").map(c => c.UserID);
+  
+  const myApplications = applications.filter(a => a.UserID === appState.currentUser && a.ProjectType === "Internship" && a.CompanyID && activeCompanyIds.includes(a.CompanyID));
   
   if (myApplications.length >= 3) {
     alert("최대 3개의 기업까지만 지원 가능합니다.");
