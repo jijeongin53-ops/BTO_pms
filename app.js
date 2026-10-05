@@ -328,12 +328,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const authTabs = document.querySelectorAll(".auth-tab");
   authTabs.forEach(tab => {
     tab.addEventListener("click", () => {
+      if (!tab.dataset.target) return; // Skip if no target (like admin btn)
       authTabs.forEach(t => t.classList.remove("active"));
       document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
       tab.classList.add("active");
       document.getElementById(tab.dataset.target).classList.add("active");
     });
   });
+  
+  const adminLoginBtn = document.getElementById("admin-login-btn");
+  if (adminLoginBtn) {
+    adminLoginBtn.addEventListener("click", () => {
+      // 관리자 강제 로그인 처리
+      appState.login("Btopms", "Operator");
+    });
+  }
 
   const signupRadios = document.querySelectorAll('input[name="signup-role"]');
   signupRadios.forEach(radio => {
