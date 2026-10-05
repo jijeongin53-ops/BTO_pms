@@ -103,6 +103,9 @@ class PMSDatabase {
     if (!localStorage.getItem("PMS_Document_Templates")) {
       localStorage.setItem("PMS_Document_Templates", JSON.stringify([]));
     }
+    if (!localStorage.getItem("PMS_Travelthon")) {
+      localStorage.setItem("PMS_Travelthon", JSON.stringify([]));
+    }
   }
 
   getTable(tableName) {
@@ -186,6 +189,11 @@ class PMSDatabase {
         }
         if (res.data.Inquiries) {
           localStorage.setItem("PMS_Inquiries", JSON.stringify(res.data.Inquiries));
+        }
+        if (res.data["관광트래블톤"]) {
+          localStorage.setItem("PMS_Travelthon", JSON.stringify(res.data["관광트래블톤"]));
+        } else if (res.data.Travelthon) {
+          localStorage.setItem("PMS_Travelthon", JSON.stringify(res.data.Travelthon));
         }
         
         if (syncBadge) {
@@ -292,6 +300,13 @@ const appState = {
 
     document.getElementById("auth-view").classList.remove("active");
     document.getElementById("app-main-content").style.display = "block";
+    
+    // [사용자 요청] 로그인 시 공지사항 팝업 삭제 처리
+    const noticeModal = document.getElementById("notice-modal");
+    if (noticeModal) {
+      noticeModal.style.display = "none";
+      noticeModal.style.opacity = "0";
+    }
     
     // 자동 실시간 데이터 동기화
     if (db.liveMode && db.appsScriptUrl) {
@@ -2345,6 +2360,9 @@ window.cancelCompanyApplication = async function(companyId) {
 };
 
 window.openNoticeModal = function(arg1, content, date) {
+  // [사용자 요청] 로그인 시 공지사항 삭제 요청에 따라 모달 팝업 오픈 비활성화 처리
+  return;
+  /* 기존 공지 모달 오픈 로직 보존
   const modal = document.getElementById("notice-modal");
   if (modal) {
     if (typeof arg1 === "object") {
@@ -2359,6 +2377,7 @@ window.openNoticeModal = function(arg1, content, date) {
     modal.style.display = "flex";
     setTimeout(() => { modal.style.opacity = "1"; }, 10);
   }
+  */
 };
 
 window.closeNoticeModal = function() {

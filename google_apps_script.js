@@ -98,7 +98,17 @@ function initializeSheets() {
     sheetTemplates.appendRow(["TemplateID", "DocType", "FileName", "DriveURL"]);
   }
 
-  // 11) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
+  // 11) 관광트래블톤 탭 초기화 (관광트래블톤 신청 접수용)
+  var sheetTravelthon = ss.getSheetByName("관광트래블톤") || ss.getSheetByName("Travelthon") || ss.insertSheet("관광트래블톤");
+  if (sheetTravelthon.getLastRow() === 0) {
+    sheetTravelthon.appendRow([
+      "ApplyID", "UserID", "ApplicantName", "Phone", "Email", "Affiliation", 
+      "ParticipationType", "TeamName", "MemberCount", "MemberDetails", 
+      "ProposalTitle", "ProposalSummary", "ProposalFileUrl", "ApplyTime", "Status", "Score", "Note"
+    ]);
+  }
+
+  // 12) 기본 '시트1' 또는 'Sheet1'이 있으면 삭제
   var defaultSheet1 = ss.getSheetByName("시트1");
   var defaultSheet2 = ss.getSheetByName("Sheet1");
   if (defaultSheet1 && ss.getSheets().length > 1) ss.deleteSheet(defaultSheet1);
@@ -163,8 +173,19 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 10개 탭에서 데이터를 읽어와 JSON으로 반환
-    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices", "Academy_Attendance", "Inquiries", "Document_Templates"];
+    // 관광트래블톤 시트 자동 확인 및 생성
+    var sheetTravelthonCheck = ss.getSheetByName("관광트래블톤") || ss.getSheetByName("Travelthon");
+    if (!sheetTravelthonCheck) {
+      sheetTravelthonCheck = ss.insertSheet("관광트래블톤");
+      sheetTravelthonCheck.appendRow([
+        "ApplyID", "UserID", "ApplicantName", "Phone", "Email", "Affiliation", 
+        "ParticipationType", "TeamName", "MemberCount", "MemberDetails", 
+        "ProposalTitle", "ProposalSummary", "ProposalFileUrl", "ApplyTime", "Status", "Score", "Note"
+      ]);
+    }
+
+    // 11개 탭에서 데이터를 읽어와 JSON으로 반환
+    var sheets = ["Master_Users", "Project_Status", "Documents_Log", "Registered_Users", "Application_Status", "Admin_Dashboard", "Notices", "Academy_Attendance", "Inquiries", "Document_Templates", "관광트래블톤", "Travelthon"];
     var result = {};
     
     sheets.forEach(function(sheetName) {
@@ -739,6 +760,55 @@ function doPost(e) {
       ]);
       
       return makeJsonResponse({ success: true, message: "Inquiry submitted successfully" });
+      
+    } else if (action === "applyTravelthon") {
+      // 관광트래블톤 참가 신청 접수
+      var sheet = ss.getSheetByName("관광트래블톤") || ss.getSheetByName("Travelthon");
+      if (!sheet) {
+        sheet = ss.insertSheet("관광트래블톤");
+        sheet.appendRow([
+          "ApplyID", "UserID", "ApplicantName", "Phone", "Email", "Affiliation", 
+          "ParticipationType", "TeamName", "MemberCount", "MemberDetails", 
+          "ProposalTitle", "ProposalSummary", "ProposalFileUrl", "ApplyTime", "Status", "Score", "Note"
+        ]);
+      }
+      var nowStr = Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd HH:mm:ss");
+      var applyId = "TRV-" + Date.now();
+      
+      sheet.appendRow([
+        applyId,
+        postData.UserID || "",
+        postData.ApplicantName || "",
+        postData.Phone || "",
+        postData.Email || "",
+        postData.Affiliation || "",
+        postData.ParticipationType || "개인",
+        postData.TeamName || "",
+        postData.MemberCount || 1,
+        postData.MemberDetails || "",
+        postData.ProposalTitle || "",
+        postData.ProposalSummary || "",
+        postData.ProposalFileUrl || "",
+        nowStr,
+        "접수완료",
+        "",
+        postData.Note || ""
+      ]);
+      
+      return makeJsonResponse({ success: true, message: "관광트래블톤 신청이 접수되었습니다.", applyId: applyId });
+      
+    } else if (action === "createTravelthonSheet") {
+      // 관광트래블톤 시트 즉시 생성 액션
+      var sheet = ss.getSheetByName("관광트래블톤") || ss.getSheetByName("Travelthon");
+      if (!sheet) {
+        sheet = ss.insertSheet("관광트래블톤");
+        sheet.appendRow([
+          "ApplyID", "UserID", "ApplicantName", "Phone", "Email", "Affiliation", 
+          "ParticipationType", "TeamName", "MemberCount", "MemberDetails", 
+          "ProposalTitle", "ProposalSummary", "ProposalFileUrl", "ApplyTime", "Status", "Score", "Note"
+        ]);
+      }
+      return makeJsonResponse({ success: true, message: "관광트래블톤 시트가 생성되었습니다." });
     }
     
     return makeJsonResponse({ success: false, error: "Unknown action: " + action });
